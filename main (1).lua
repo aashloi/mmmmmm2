@@ -7419,7 +7419,7 @@ o:CreateTopbarButton("Close","x",function()
 e(o.UIElements.Main,0.35,{Position=UDim2.new(0.5,0,0.5,0)},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 o:Dialog{
 
-Title="鱼",
+Title="❌",
 Content="你确定关闭吗？",
 Buttons={
 {
