@@ -1,0 +1,66 @@
+-- 加载 Turtle UI 库
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/aashloi/mmmmmm2/refs/heads/main/ui"))()
+
+-- 创建窗口
+local window = library:Window("无限氧气")
+
+-- 标志变量
+local infoxygen = false
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local deathcon = nil
+
+-- 辅助函数
+local function getchar()
+    return lp.Character or lp.CharacterAdded:Wait()
+end
+
+local function gethum()
+    return getchar():WaitForChild("Humanoid")
+end
+
+local function FindChildOfType(parent, childname, classname)
+    local child = parent:FindFirstChild(childname)
+    if child and child.ClassName == classname then
+        return child
+    end
+end
+
+-- 无限氧气逻辑
+RunService.Heartbeat:Connect(function()
+    if infoxygen then
+        if not deathcon then
+            deathcon = gethum().Died:Connect(function()
+                task.delay(9, function()
+                    local tank = FindChildOfType(getchar(), "DivingTank", "Decal")
+                    if tank then tank:Destroy() end
+                    local oxy = Instance.new("Decal")
+                    oxy.Name = "DivingTank"
+                    oxy:SetAttribute("Tier", 1/0)
+                    oxy.Parent = getchar()
+                    deathcon = nil
+                end)
+            end)
+        end
+        if deathcon and gethum().Health > 0 then
+            if not getchar():FindFirstChild("DivingTank") then
+                local oxy = Instance.new("Decal")
+                oxy.Name = "DivingTank"
+                oxy:SetAttribute("Tier", 1/0)
+                oxy.Parent = getchar()
+            end
+        end
+    else
+        local tank = FindChildOfType(getchar(), "DivingTank", "Decal")
+        if tank then tank:Destroy() end
+    end
+end)
+
+-- UI 开关
+window:Toggle("无限氧气", false, function(state)
+    infoxygen = state
+end)
+
+-- 可选：添加隐藏 UI 键绑定
+library:Keybind("RightControl")
