@@ -114,6 +114,28 @@ function library:Window(name)
     UiWindow.Position = UDim2.new(0, xOffset, 0, 20)
     UiWindow.Size = UDim2.new(0, 207, 0, 33)
     UiWindow.ZIndex = 4 + zindex
+    
+    -- 添加圆角和渐变背景
+local UiCorner = Instance.new("UICorner")
+UiCorner.CornerRadius = UDim.new(0, 12)
+UiCorner.Parent = UiWindow
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 12)
+HeaderCorner.Parent = Header
+
+local Gradient = Instance.new("UIGradient")
+Gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 105, 180)), -- 粉
+    ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)),   -- 橙
+    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 191, 255)),   -- 蓝
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),   -- 青蓝
+    ColorSequenceKeypoint.new(0.8, Color3.fromRGB(255, 215, 0)),   -- 金
+    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 105, 180))  -- 回到粉
+}
+Gradient.Rotation = 90
+Gradient.Parent = UiWindow
+
     UiWindow.Active = true
     Dragify(UiWindow)
 
