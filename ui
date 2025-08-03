@@ -109,29 +109,22 @@ function library:Window(name)
 
     UiWindow.Name = "UiWindow"
     UiWindow.Parent = TurtleUiLib
-    UiWindow.BackgroundColor3 = Color3.fromRGB(0, 151, 230)
-    UiWindow.BorderColor3 = Color3.fromRGB(0, 151, 230)
-    UiWindow.Position = UDim2.new(0, xOffset, 0, 20)
-    UiWindow.Size = UDim2.new(0, 207, 0, 33)
-    UiWindow.ZIndex = 4 + zindex
-    
-    -- 添加圆角和渐变背景
+UiWindow.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+UiWindow.BorderColor3 = Color3.fromRGB(40, 40, 40)
+UiWindow.Position = UDim2.new(0, xOffset, 0, 20)
+UiWindow.Size = UDim2.new(0, 207, 0, 33)
+UiWindow.ZIndex = 4 + zindex
+
+-- 圆角
 local UiCorner = Instance.new("UICorner")
 UiCorner.CornerRadius = UDim.new(0, 12)
 UiCorner.Parent = UiWindow
 
-local HeaderCorner = Instance.new("UICorner")
-HeaderCorner.CornerRadius = UDim.new(0, 12)
-HeaderCorner.Parent = Header
-
+-- 黑灰渐变
 local Gradient = Instance.new("UIGradient")
 Gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 105, 180)), -- 粉
-    ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)),   -- 橙
-    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 191, 255)),   -- 蓝
-    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),   -- 青蓝
-    ColorSequenceKeypoint.new(0.8, Color3.fromRGB(255, 215, 0)),   -- 金
-    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 105, 180))  -- 回到粉
+    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(60, 60, 60)),
+    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(30, 30, 30))
 }
 Gradient.Rotation = 90
 Gradient.Parent = UiWindow
@@ -144,30 +137,25 @@ Gradient.Parent = UiWindow
     local Header = Instance.new("Frame")
     Header.Name = "Header"
     Header.Parent = UiWindow
-    Header.BackgroundColor3 = Color3.fromRGB(0, 168, 255)
-    Header.BorderColor3 = Color3.fromRGB(0, 168, 255)
-    Header.Position = UDim2.new(0, 0, -0.0202544238, 0)
-    Header.Size = UDim2.new(0, 207, 0, 26)
-    Header.ZIndex = 5 + zindex
+Header.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Header.BorderColor3 = Color3.fromRGB(50, 50, 50)
+Header.Position = UDim2.new(0, 0, -0.0202544238, 0)
+Header.Size = UDim2.new(0, 207, 0, 26)
+Header.ZIndex = 5 + zindex
 
--- 添加 Header 圆角
+-- 圆角
 local HeaderCorner = Instance.new("UICorner")
 HeaderCorner.CornerRadius = UDim.new(0, 12)
 HeaderCorner.Parent = Header
 
--- 添加 Header 渐变
+-- 黑灰渐变
 local HeaderGradient = Instance.new("UIGradient")
 HeaderGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 105, 180)),
-    ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)),
-    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 191, 255)),
-    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
-    ColorSequenceKeypoint.new(0.8, Color3.fromRGB(255, 215, 0)),
-    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 105, 180))
+    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(60, 60, 60)),
+    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(30, 30, 30))
 }
 HeaderGradient.Rotation = 90
 HeaderGradient.Parent = Header
-
 
     local HeaderText = Instance.new("TextLabel")
     HeaderText.Name = "HeaderText"
