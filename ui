@@ -150,6 +150,25 @@ Gradient.Parent = UiWindow
     Header.Size = UDim2.new(0, 207, 0, 26)
     Header.ZIndex = 5 + zindex
 
+-- 添加 Header 圆角
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 12)
+HeaderCorner.Parent = Header
+
+-- 添加 Header 渐变
+local HeaderGradient = Instance.new("UIGradient")
+HeaderGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 105, 180)),
+    ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)),
+    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 191, 255)),
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
+    ColorSequenceKeypoint.new(0.8, Color3.fromRGB(255, 215, 0)),
+    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 105, 180))
+}
+HeaderGradient.Rotation = 90
+HeaderGradient.Parent = Header
+
+
     local HeaderText = Instance.new("TextLabel")
     HeaderText.Name = "HeaderText"
     HeaderText.Parent = Header
@@ -204,33 +223,51 @@ Gradient.Parent = UiWindow
         self.Ui:Destroy()
     end
 
-    function functions:Button(name, callback)
-        local name = name or "Button"
-        local callback = callback or function() end
+function functions:Button(name, callback)
+    local name = name or "Button"
+    local callback = callback or function() end
 
-        sizes[winCount] = sizes[winCount] + 32
-        Window.Size = UDim2.new(0, 207, 0, sizes[winCount] + 10)
+    sizes[winCount] = sizes[winCount] + 32
+    Window.Size = UDim2.new(0, 207, 0, sizes[winCount] + 10)
 
-        local Button = Instance.new("TextButton")
-        listOffset[winCount] = listOffset[winCount] + 32
-        Button.Name = "Button"
-        Button.Parent = Window
-        Button.BackgroundColor3 = Color3.fromRGB(53, 59, 72)
-        Button.BorderColor3 = Color3.fromRGB(113, 128, 147)
-        Button.Position = UDim2.new(0, 12, 0, listOffset[winCount])
-        Button.Size = UDim2.new(0, 182, 0, 26)
-        Button.ZIndex = 2 + zindex
-        Button.Selected = true
-        Button.Font = Enum.Font.SourceSans
-        Button.TextColor3 = Color3.fromRGB(245, 246, 250)
-        Button.TextSize = 16.000
-        Button.TextStrokeTransparency = 123.000
-        Button.TextWrapped = true
-        Button.Text = name
-        Button.MouseButton1Down:Connect(callback)
+    local Button = Instance.new("TextButton")
+    listOffset[winCount] = listOffset[winCount] + 32
+    Button.Name = "Button"
+    Button.Parent = Window
+    Button.BackgroundColor3 = Color3.fromRGB(53, 59, 72) -- 可保留，不影响渐变
+    Button.BorderColor3 = Color3.fromRGB(113, 128, 147)
+    Button.Position = UDim2.new(0, 12, 0, listOffset[winCount])
+    Button.Size = UDim2.new(0, 182, 0, 26)
+    Button.ZIndex = 2 + zindex
+    Button.Selected = true
+    Button.Font = Enum.Font.SourceSans
+    Button.TextColor3 = Color3.fromRGB(245, 246, 250)
+    Button.TextSize = 16.000
+    Button.TextStrokeTransparency = 123.000
+    Button.TextWrapped = true
+    Button.Text = name
+    Button.MouseButton1Down:Connect(callback)
 
-        pastSliders[winCount] = false
-    end
+    -- ✅ 添加圆角
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 8)
+    ButtonCorner.Parent = Button
+
+    -- ✅ 添加渐变
+    local ButtonGradient = Instance.new("UIGradient")
+    ButtonGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 105, 180)), -- 粉
+        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)),   -- 橙
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 191, 255)),   -- 蓝
+        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),   -- 青蓝
+        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(255, 215, 0)),   -- 金
+        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 105, 180))  -- 回到粉
+    }
+    ButtonGradient.Rotation = 90
+    ButtonGradient.Parent = Button
+
+    pastSliders[winCount] = false
+end
     
     function functions:Label(text, color)
         local color = color or Color3.fromRGB(220, 221, 225)
