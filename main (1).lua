@@ -593,8 +593,8 @@ ImageColor3=j=="White"and Color3.new(0,0,0)or nil,
 ImageTransparency=1
 },{
 e("UIPadding",{
-PaddingLeft=UDim.new(0,8),
-PaddingRight=UDim.new(0,8),
+PaddingLeft=UDim.new(0,16),
+PaddingRight=UDim.new(0,16),
 }),
 e("UIListLayout",{
 FillDirection="Horizontal",
@@ -612,7 +612,7 @@ TextColor3=(j~="Primary"and j~="White")and"Text",
 },
 TextColor3=j=="Primary"and Color3.new(1,1,1)or j=="White"and Color3.new(0,0,0)or nil,
 AutomaticSize="XY",
-TextSize=14,
+TextSize=18,
 })
 })
 })
@@ -792,7 +792,7 @@ CornerRadius=UDim.new(0,f.Window.UICorner)
 end
 
 h.UIElements.Main=d("Frame",{
-Size=UDim2.new(0,220,0,0),
+Size=UDim2.new(0,280,0,0),
 ThemeTag={
 BackgroundColor3="Dialog",
 },
@@ -1006,7 +1006,7 @@ AutomaticSize="Y",
 FontFace=Font.new(d.Font,Enum.FontWeight.Medium),
 TextXAlignment="Left",
 Text=i.KeySystem.Note,
-TextSize=14,
+TextSize=18,
 TextTransparency=.4,
 ThemeTag={
 TextColor3="Text",
@@ -1042,7 +1042,7 @@ Text=i.KeySystem.Thumbnail.Title,
 ThemeTag={
 TextColor3="Text",
 },
-TextSize=14,
+TextSize=18,
 FontFace=Font.new(d.Font,Enum.FontWeight.Medium),
 BackgroundTransparency=1,
 AutomaticSize="XY",
@@ -1086,8 +1086,8 @@ x,
 z,
 e("UIPadding",{
 PaddingTop=UDim.new(0,16),
-PaddingLeft=UDim.new(0,8),
-PaddingRight=UDim.new(0,8),
+PaddingLeft=UDim.new(0,16),
+PaddingRight=UDim.new(0,16),
 PaddingBottom=UDim.new(0,16),
 })
 }),
@@ -1523,7 +1523,7 @@ AutomaticSize="Y",
 FontFace=Font.new(d.Font,Enum.FontWeight.Medium),
 TextXAlignment="Left",
 Text=h.Content,
-TextSize=14,
+TextSize=18,
 TextTransparency=.2,
 ThemeTag={
 TextColor3="Text",
@@ -1553,7 +1553,7 @@ Text=h.Thumbnail.Title,
 ThemeTag={
 TextColor3="Text",
 },
-TextSize=14,
+TextSize=18,
 FontFace=Font.new(d.Font,Enum.FontWeight.Medium),
 BackgroundTransparency=1,
 AutomaticSize="XY",
@@ -1596,8 +1596,8 @@ s,
 t,
 e("UIPadding",{
 PaddingTop=UDim.new(0,16),
-PaddingLeft=UDim.new(0,8),
-PaddingRight=UDim.new(0,8),
+PaddingLeft=UDim.new(0,16),
+PaddingRight=UDim.new(0,16),
 PaddingBottom=UDim.new(0,16),
 })
 }),
@@ -5515,7 +5515,7 @@ Text="This tab is empty",
 ThemeTag={
 TextColor3="Text"
 },
-TextSize=14,
+TextSize=18,
 TextTransparency=.5,
 BackgroundTransparency=1,
 FontFace=Font.new(ab.Font,Enum.FontWeight.Medium),
@@ -7311,7 +7311,7 @@ Parent=N
 if L.Content then
 b("TextLabel",{
 Text=L.Content,
-TextSize=14,
+TextSize=18,
 TextTransparency=.4,
 TextWrapped=true,
 RichText=true,
