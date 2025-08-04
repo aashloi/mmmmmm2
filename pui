@@ -8,65 +8,6 @@ DRR["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
 DRR["1"]["Name"] = [[DrRay]];
 DRR["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
--- 插入“UI颜色”按钮，挂在忍者传奇标题旁边
-local ThemeColors = {
-    { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
-    { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
-    { name = "黑色", background = Color3.fromRGB(15, 15, 15), text = Color3.fromRGB(255, 255, 255) },
-    { name = "粉色", background = Color3.fromRGB(255, 182, 193), text = Color3.fromRGB(80, 0, 80) },
-    { name = "金色", background = Color3.fromRGB(255, 223, 0), text = Color3.fromRGB(102, 51, 0) },
-    { name = "红色", background = Color3.fromRGB(255, 69, 58), text = Color3.fromRGB(255, 255, 255) },
-    { name = "紫色", background = Color3.fromRGB(128, 0, 128), text = Color3.fromRGB(230, 230, 255) },
-    { name = "绿色", background = Color3.fromRGB(0, 200, 83), text = Color3.fromRGB(255, 255, 255) },
-    { name = "灰色", background = Color3.fromRGB(128, 128, 128), text = Color3.fromRGB(0, 0, 0) },
-}
-
-local themeIndex = 1
-
--- 挂载到 TopBar.ProfileMenu
-local parentGui = DRR["1"].TopBar.ProfileMenu
-
-local ThemeButton = Instance.new("TextButton")
-ThemeButton.Name = "ThemeButton"
-ThemeButton.Size = UDim2.new(0, 100, 0, 36)
-ThemeButton.Position = UDim2.new(0.48, 0, 0.075, 0)
-ThemeButton.BackgroundColor3 = ThemeColors[1].background
-ThemeButton.TextColor3 = ThemeColors[1].text
-ThemeButton.TextScaled = true
-ThemeButton.Text = "UI颜色"
-ThemeButton.Font = Enum.Font.SourceSansBold
-ThemeButton.BorderSizePixel = 0
-ThemeButton.ZIndex = 10
-ThemeButton.Parent = parentGui
-
--- 圆角
-local corner = Instance.new("UICorner", ThemeButton)
-corner.CornerRadius = UDim.new(0, 8)
-
--- 应用主题函数
-local function applyTheme(guiObject, bgColor, textColor)
-    if guiObject:IsA("Frame") or guiObject:IsA("TextButton") or guiObject:IsA("ImageButton") then
-        guiObject.BackgroundColor3 = bgColor
-    end
-    if guiObject:IsA("TextLabel") or guiObject:IsA("TextButton") or guiObject:IsA("TextBox") then
-        guiObject.TextColor3 = textColor
-    end
-    for _, child in ipairs(guiObject:GetChildren()) do
-        applyTheme(child, bgColor, textColor)
-    end
-end
-
--- 点击切换颜色
-ThemeButton.MouseButton1Click:Connect(function()
-    themeIndex = themeIndex + 1
-    if themeIndex > #ThemeColors then
-        themeIndex = 1
-    end
-    local current = ThemeColors[themeIndex]
-    applyTheme(DRR["1"], current.background, current.text)
-end)
-
-
 -- DrRay.TopBar
 DRR["2"] = Instance.new("Frame", DRR["1"]);
 DRR["2"]["BorderSizePixel"] = 0;
@@ -1812,3 +1753,31 @@ end;
 };
 
 return require(DRR["93"]);
+
+
+-- 插入北京时间 TextLabel 到 ProfileMenu
+local function getBeijingTime()
+    local utc = os.time(os.date("!*t"))
+    local beijingOffset = 8 * 60 * 60
+    local beijingTime = utc + beijingOffset
+    local t = os.date("*t", beijingTime)
+    return string.format("%02d.%02d", t.hour, t.min)
+end
+
+local success, err = pcall(function()
+    local parentGui = DRR["1"].TopBar:FindFirstChild("ProfileMenu") or DRR["1"]
+    local TimeLabel = Instance.new("TextLabel")
+    TimeLabel.Name = "BeijingTime"
+    TimeLabel.Size = UDim2.new(0, 80, 0, 36)
+    TimeLabel.Position = UDim2.new(0.46, 0, 0.075, 0)
+    TimeLabel.BackgroundTransparency = 1
+    TimeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TimeLabel.TextScaled = true
+    TimeLabel.Font = Enum.Font.SourceSansBold
+    TimeLabel.Text = getBeijingTime()
+    TimeLabel.Parent = parentGui
+end)
+
+if not success then
+    warn("无法插入北京时间：" .. tostring(err))
+end
