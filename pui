@@ -1305,11 +1305,17 @@ task.spawn(function()
     while true do
         task.wait(0.1)
         -- 获取当前UTC时间
-        local utcTime = os.time()
+        local utcNow = os.time(os.date("!*t"))
         -- 转换为北京时间 (UTC+8)
-        local beijingTime = utcTime + 8 * 60 * 60
-        -- 格式化为北京时间的小时和分钟
-        parent.TopBar.ProfileMenu.Clock.TextLabel.Text = os.date("%H:%M", beijingTime)
+        local beijingTimestamp = utcNow + 8 * 60 * 60
+        -- 获取北京时间的小时和分钟
+        local beijingTime = os.date("*t", beijingTimestamp)
+        
+        -- 格式化为两位数显示
+        local hour = string.format("%02d", beijingTime.hour)
+        local minute = string.format("%02d", beijingTime.min)
+        
+        parent.TopBar.ProfileMenu.Clock.TextLabel.Text = hour .. ":" .. minute
     end
 end)
 	parent.TopBar.ProfileMenu.Title.TextLabel.Text = name
