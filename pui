@@ -1301,18 +1301,19 @@ function UILIB:Load(name, img, direction)
 			task.wait(0.3)
 			tw2:Play()
 	end)
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        -- 直接获取本地时间（如果用户在中国就是北京时间）
-        local timeTable = os.date("*t")
-        -- 格式化为两位数显示
-        local hour = string.format("%02d", timeTable.hour)
-        local minute = string.format("%02d", timeTable.min)
-        
-        parent.TopBar.ProfileMenu.Clock.TextLabel.Text = hour .. ":" .. minute
-    end
-end)
+function UILIB:Load(name, img, direction)
+    -- ... 其他代码 ...
+    
+    task.spawn(function()
+        while true do
+            task.wait(0.1)
+            -- 修复时间显示格式（分钟使用%M而不是%m）
+            parent.TopBar.ProfileMenu.Clock.TextLabel.Text = os.date("%H:%M")
+        end
+    end)
+    
+    -- ... 其他代码 ...
+end
 	parent.TopBar.ProfileMenu.Title.TextLabel.Text = name
 	if img then
 		parent.MainBar.Logo.Image = img
