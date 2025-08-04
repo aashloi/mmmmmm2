@@ -8,55 +8,6 @@ DRR["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
 DRR["1"]["Name"] = [[DrRay]];
 DRR["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
--- ThemeButton for switching themes
-local ThemeColors = {
-    { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
-    { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
-    { name = "黑色", background = Color3.fromRGB(15, 15, 15), text = Color3.fromRGB(255, 255, 255) },
-    { name = "粉色", background = Color3.fromRGB(255, 182, 193), text = Color3.fromRGB(80, 0, 80) },
-    { name = "金色", background = Color3.fromRGB(255, 223, 0), text = Color3.fromRGB(102, 51, 0) },
-    { name = "红色", background = Color3.fromRGB(255, 69, 58), text = Color3.fromRGB(255, 255, 255) },
-    { name = "紫色", background = Color3.fromRGB(128, 0, 128), text = Color3.fromRGB(230, 230, 255) },
-    { name = "绿色", background = Color3.fromRGB(0, 200, 83), text = Color3.fromRGB(255, 255, 255) },
-    { name = "灰色", background = Color3.fromRGB(128, 128, 128), text = Color3.fromRGB(0, 0, 0) },
-}
-
-local themeIndex = 1
-
--- 创建按钮插入到主 GUI 中
-local ThemeButton = Instance.new("TextButton", DRR["1"].TopBar.ProfileMenu)
-ThemeButton.Name = "ThemeButton"
-ThemeButton.Size = UDim2.new(0, 100, 0, 30)
-ThemeButton.Position = UDim2.new(0.61, 0, 0.1, 0)
-ThemeButton.BackgroundColor3 = ThemeColors[1].background
-ThemeButton.TextColor3 = ThemeColors[1].text
-ThemeButton.TextScaled = true
-ThemeButton.Text = "切换主题"
-
--- 应用主题函数
-local function applyTheme(guiObject, bgColor, textColor)
-    if guiObject:IsA("Frame") or guiObject:IsA("TextButton") or guiObject:IsA("ImageButton") then
-        guiObject.BackgroundColor3 = bgColor
-    end
-    if guiObject:IsA("TextLabel") or guiObject:IsA("TextButton") or guiObject:IsA("TextBox") then
-        guiObject.TextColor3 = textColor
-    end
-    for _, child in ipairs(guiObject:GetChildren()) do
-        applyTheme(child, bgColor, textColor)
-    end
-end
-
-ThemeButton.MouseButton1Click:Connect(function()
-    themeIndex = themeIndex + 1
-    if themeIndex > #ThemeColors then
-        themeIndex = 1
-    end
-    local current = ThemeColors[themeIndex]
-    applyTheme(DRR["1"], current.background, current.text)
-    ThemeButton.Text = current.name
-end)
-
-
 -- DrRay.TopBar
 DRR["2"] = Instance.new("Frame", DRR["1"]);
 DRR["2"]["BorderSizePixel"] = 0;
@@ -1802,3 +1753,57 @@ end;
 };
 
 return require(DRR["93"]);
+
+
+-- 主题切换按钮
+local ThemeColors = {
+    { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
+    { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
+    { name = "黑色", background = Color3.fromRGB(15, 15, 15), text = Color3.fromRGB(255, 255, 255) },
+    { name = "粉色", background = Color3.fromRGB(255, 182, 193), text = Color3.fromRGB(80, 0, 80) },
+    { name = "金色", background = Color3.fromRGB(255, 223, 0), text = Color3.fromRGB(102, 51, 0) },
+    { name = "红色", background = Color3.fromRGB(255, 69, 58), text = Color3.fromRGB(255, 255, 255) },
+    { name = "紫色", background = Color3.fromRGB(128, 0, 128), text = Color3.fromRGB(230, 230, 255) },
+    { name = "绿色", background = Color3.fromRGB(0, 200, 83), text = Color3.fromRGB(255, 255, 255) },
+    { name = "灰色", background = Color3.fromRGB(128, 128, 128), text = Color3.fromRGB(0, 0, 0) },
+}
+
+local themeIndex = 1
+local topBar = DRR["1"]:FindFirstChild("TopBar")
+local profileMenu = topBar and topBar:FindFirstChild("ProfileMenu")
+
+if profileMenu then
+    local ThemeButton = Instance.new("TextButton")
+    ThemeButton.Name = "ThemeButton"
+    ThemeButton.Size = UDim2.new(0, 32, 0, 32)
+    ThemeButton.Position = UDim2.new(0.935, 0, 0.08, 0)
+    ThemeButton.BackgroundColor3 = ThemeColors[1].background
+    ThemeButton.TextColor3 = ThemeColors[1].text
+    ThemeButton.TextScaled = true
+    ThemeButton.Text = "🎨"
+    ThemeButton.Font = Enum.Font.SourceSansBold
+    ThemeButton.BorderSizePixel = 0
+    ThemeButton.ZIndex = 10
+    ThemeButton.Parent = profileMenu
+
+    local function applyTheme(guiObject, bgColor, textColor)
+        if guiObject:IsA("Frame") or guiObject:IsA("TextButton") or guiObject:IsA("ImageButton") then
+            guiObject.BackgroundColor3 = bgColor
+        end
+        if guiObject:IsA("TextLabel") or guiObject:IsA("TextButton") or guiObject:IsA("TextBox") then
+            guiObject.TextColor3 = textColor
+        end
+        for _, child in ipairs(guiObject:GetChildren()) do
+            applyTheme(child, bgColor, textColor)
+        end
+    end
+
+    ThemeButton.MouseButton1Click:Connect(function()
+        themeIndex = themeIndex + 1
+        if themeIndex > #ThemeColors then
+            themeIndex = 1
+        end
+        local current = ThemeColors[themeIndex]
+        applyTheme(DRR["1"], current.background, current.text)
+    end)
+end
