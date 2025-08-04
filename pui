@@ -1788,5 +1788,10 @@ end;
 };
 
 return require(DRR["93"]);
--- Hide the Clock UI
-if DRR["17"] then DRR["17"].Visible = false end
+-- 延迟隐藏 Clock，确保 UI 加载完成后再隐藏
+task.delay(1, function()
+    local clock = DRR and DRR["17"]
+    if clock then
+        clock.Visible = false
+    end
+end)
