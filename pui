@@ -8,7 +8,7 @@ DRR["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
 DRR["1"]["Name"] = [[DrRay]];
 DRR["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
--- ThemeButton for switching themes
+-- 紧凑正方形主题按钮，替代 Clock
 local ThemeColors = {
     { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
     { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
@@ -23,15 +23,18 @@ local ThemeColors = {
 
 local themeIndex = 1
 
--- 创建按钮插入到主 GUI 中
+-- 正方形按钮插入到 TopBar.ProfileMenu（替代原Clock）
 local ThemeButton = Instance.new("TextButton", DRR["1"].TopBar.ProfileMenu)
 ThemeButton.Name = "ThemeButton"
-ThemeButton.Size = UDim2.new(0, 100, 0, 30)
-ThemeButton.Position = UDim2.new(0.61, 0, 0.1, 0)
+ThemeButton.Size = UDim2.new(0, 32, 0, 32)
+ThemeButton.Position = UDim2.new(0.935, 0, 0.08, 0)
 ThemeButton.BackgroundColor3 = ThemeColors[1].background
 ThemeButton.TextColor3 = ThemeColors[1].text
 ThemeButton.TextScaled = true
-ThemeButton.Text = "切换主题"
+ThemeButton.Text = "🎨"
+ThemeButton.Font = Enum.Font.SourceSansBold
+ThemeButton.BorderSizePixel = 0
+ThemeButton.ZIndex = 10
 
 -- 应用主题函数
 local function applyTheme(guiObject, bgColor, textColor)
@@ -46,6 +49,7 @@ local function applyTheme(guiObject, bgColor, textColor)
     end
 end
 
+-- 切换主题
 ThemeButton.MouseButton1Click:Connect(function()
     themeIndex = themeIndex + 1
     if themeIndex > #ThemeColors then
@@ -53,7 +57,6 @@ ThemeButton.MouseButton1Click:Connect(function()
     end
     local current = ThemeColors[themeIndex]
     applyTheme(DRR["1"], current.background, current.text)
-    ThemeButton.Text = current.name
 end)
 
 
