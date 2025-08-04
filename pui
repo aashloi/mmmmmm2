@@ -8,7 +8,7 @@ DRR["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
 DRR["1"]["Name"] = [[DrRay]];
 DRR["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
--- 安全模式插入 ThemeButton（确保加载）
+-- 插入“UI颜色”按钮，挂在忍者传奇标题旁边
 local ThemeColors = {
     { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
     { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
@@ -23,29 +23,27 @@ local ThemeColors = {
 
 local themeIndex = 1
 
-local parentGui = nil
-pcall(function()
-    parentGui = DRR["1"].TopBar.ProfileMenu
-end)
-
-if not parentGui then
-    parentGui = DRR["1"]
-end
+-- 挂载到 TopBar.ProfileMenu
+local parentGui = DRR["1"].TopBar.ProfileMenu
 
 local ThemeButton = Instance.new("TextButton")
 ThemeButton.Name = "ThemeButton"
-ThemeButton.Size = UDim2.new(0, 32, 0, 32)
-ThemeButton.Position = UDim2.new(0.94, 0, 0.05, 0)
+ThemeButton.Size = UDim2.new(0, 100, 0, 36)
+ThemeButton.Position = UDim2.new(0.48, 0, 0.075, 0)
 ThemeButton.BackgroundColor3 = ThemeColors[1].background
 ThemeButton.TextColor3 = ThemeColors[1].text
 ThemeButton.TextScaled = true
-ThemeButton.Text = "🎨"
+ThemeButton.Text = "UI颜色"
 ThemeButton.Font = Enum.Font.SourceSansBold
 ThemeButton.BorderSizePixel = 0
-ThemeButton.ZIndex = 999
+ThemeButton.ZIndex = 10
 ThemeButton.Parent = parentGui
 
--- 应用主题
+-- 圆角
+local corner = Instance.new("UICorner", ThemeButton)
+corner.CornerRadius = UDim.new(0, 8)
+
+-- 应用主题函数
 local function applyTheme(guiObject, bgColor, textColor)
     if guiObject:IsA("Frame") or guiObject:IsA("TextButton") or guiObject:IsA("ImageButton") then
         guiObject.BackgroundColor3 = bgColor
@@ -58,6 +56,7 @@ local function applyTheme(guiObject, bgColor, textColor)
     end
 end
 
+-- 点击切换颜色
 ThemeButton.MouseButton1Click:Connect(function()
     themeIndex = themeIndex + 1
     if themeIndex > #ThemeColors then
