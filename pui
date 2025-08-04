@@ -262,24 +262,6 @@ DRR["26"]["AspectRatio"] = 0.9836804866790771;
 DRR["27"] = Instance.new("UIAspectRatioConstraint", DRR["2"]);
 DRR["27"]["AspectRatio"] = 5.724700927734375;
 
-
--- 修改 MainBar 背景为图片
-do
-    local mainBar = DRR["28"]
-    if mainBar then
-        mainBar.BackgroundTransparency = 1 -- 隐藏背景色
-
-        local backgroundImage = Instance.new("ImageLabel")
-        backgroundImage.Name = "BackgroundImage"
-        backgroundImage.Size = UDim2.new(1, 0, 1, 0)
-        backgroundImage.Position = UDim2.new(0, 0, 0, 0)
-        backgroundImage.BackgroundTransparency = 1
-        backgroundImage.Image = "rbxassetid://122245873500684"
-        backgroundImage.ScaleType = Enum.ScaleType.Stretch
-        backgroundImage.Parent = mainBar
-    end
-end
-
 -- DrRay.MainBar
 DRR["28"] = Instance.new("Frame", DRR["1"]);
 DRR["28"]["BorderSizePixel"] = 0;
@@ -345,24 +327,6 @@ DRR["2f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.f
 -- DrRay.Folder
 DRR["30"] = Instance.new("Folder", DRR["1"]);
 
-
-
--- 修改 TabReserved 背景为图片
-do
-    local tab = DRR["31"]
-    if tab then
-        tab.BackgroundTransparency = 1 -- 隐藏原背景
-        local img = Instance.new("ImageLabel")
-        img.Name = "BackgroundImage"
-        img.Size = UDim2.new(1, 0, 1, 0)
-        img.Position = UDim2.new(0, 0, 0, 0)
-        img.BackgroundTransparency = 1
-        img.Image = "rbxassetid://122245873500684"
-        img.ScaleType = Enum.ScaleType.Stretch
-        img.ZIndex = -1
-        img.Parent = tab
-    end
-end
 
 -- DrRay.Folder.TabReserved
 DRR["31"] = Instance.new("ScrollingFrame", DRR["30"]);
