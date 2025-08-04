@@ -1304,16 +1304,11 @@ function UILIB:Load(name, img, direction)
 task.spawn(function()
     while true do
         task.wait(0.1)
-        -- 获取当前UTC时间
-        local utcNow = os.time(os.date("!*t"))
-        -- 转换为北京时间 (UTC+8)
-        local beijingTimestamp = utcNow + 8 * 60 * 60
-        -- 获取北京时间的小时和分钟
-        local beijingTime = os.date("*t", beijingTimestamp)
-        
+        -- 直接获取本地时间（如果用户在中国就是北京时间）
+        local timeTable = os.date("*t")
         -- 格式化为两位数显示
-        local hour = string.format("%02d", beijingTime.hour)
-        local minute = string.format("%02d", beijingTime.min)
+        local hour = string.format("%02d", timeTable.hour)
+        local minute = string.format("%02d", timeTable.min)
         
         parent.TopBar.ProfileMenu.Clock.TextLabel.Text = hour .. ":" .. minute
     end
