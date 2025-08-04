@@ -168,6 +168,41 @@ DRR["15"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
 DRR["16"] = Instance.new("UIPadding", DRR["c"]);
 DRR["16"]["PaddingLeft"] = UDim.new(0.014000000432133675, 0);
 
+-- DrRay.TopBar.ProfileMenu.Clock
+DRR["17"] = Instance.new("ImageButton", DRR["c"]);
+DRR["17"]["BorderSizePixel"] = 0;
+DRR["17"]["AutoButtonColor"] = false;
+DRR["17"]["BackgroundColor3"] = Color3.fromRGB(42, 42, 58);
+DRR["17"]["Size"] = UDim2.new(0.10328257083892822, 0, 0.682426393032074, 0);
+DRR["17"]["Name"] = [[Clock]];
+DRR["17"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+DRR["17"]["Position"] = UDim2.new(0.26031631231307983, 0, 0.158786803483963, 0);
+
+-- DrRay.TopBar.ProfileMenu.Clock.UICorner
+DRR["18"] = Instance.new("UICorner", DRR["17"]);
+DRR["18"]["CornerRadius"] = UDim.new(0.30000001192092896, 0);
+
+-- DrRay.TopBar.ProfileMenu.Clock.UIGradient
+DRR["19"] = Instance.new("UIGradient", DRR["17"]);
+DRR["19"]["Rotation"] = 90;
+DRR["19"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(154, 154, 154)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(231, 231, 231))};
+
+-- DrRay.TopBar.ProfileMenu.Clock.TextLabel
+DRR["1a"] = Instance.new("TextLabel", DRR["17"]);
+DRR["1a"]["TextWrapped"] = true;
+DRR["1a"]["BorderSizePixel"] = 0;
+DRR["1a"]["TextScaled"] = true;
+DRR["1a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+DRR["1a"]["FontFace"] = Font.new([[rbxassetid://11702779517]], Enum.FontWeight.SemiBold, Enum.FontStyle.Normal);
+DRR["1a"]["TextSize"] = 14;
+DRR["1a"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+DRR["1a"]["AutomaticSize"] = Enum.AutomaticSize.X;
+DRR["1a"]["Size"] = UDim2.new(0.33195531368255615, 0, 0.41530051827430725, 0);
+DRR["1a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+DRR["1a"]["Text"] = [[00:00]];
+DRR["1a"]["BackgroundTransparency"] = 1;
+DRR["1a"]["Position"] = UDim2.new(0.21512815356254578, 0, 0.27320244908332825, 0);
+
 -- DrRay.TopBar.ProfileMenu.Title
 DRR["1b"] = Instance.new("ImageButton", DRR["c"]);
 DRR["1b"]["BorderSizePixel"] = 0;
@@ -1266,12 +1301,17 @@ function UILIB:Load(name, img, direction)
 			task.wait(0.3)
 			tw2:Play()
 	end)
-        task.spawn(function()
-	     while true do
-		task.wait(0.1)
-		parent.TopBar.ProfileMenu.Clock.TextLabel.Text = os.date("%H:%m")
-	     end
-        end)
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        -- 获取当前UTC时间
+        local utcTime = os.time()
+        -- 转换为北京时间 (UTC+8)
+        local beijingTime = utcTime + 8 * 60 * 60
+        -- 格式化为北京时间的小时和分钟
+        parent.TopBar.ProfileMenu.Clock.TextLabel.Text = os.date("%H:%M", beijingTime)
+    end
+end)
 	parent.TopBar.ProfileMenu.Title.TextLabel.Text = name
 	if img then
 		parent.MainBar.Logo.Image = img
@@ -1753,31 +1793,3 @@ end;
 };
 
 return require(DRR["93"]);
-
-
--- 插入北京时间 TextLabel 到 ProfileMenu
-local function getBeijingTime()
-    local utc = os.time(os.date("!*t"))
-    local beijingOffset = 8 * 60 * 60
-    local beijingTime = utc + beijingOffset
-    local t = os.date("*t", beijingTime)
-    return string.format("%02d.%02d", t.hour, t.min)
-end
-
-local success, err = pcall(function()
-    local parentGui = DRR["1"].TopBar:FindFirstChild("ProfileMenu") or DRR["1"]
-    local TimeLabel = Instance.new("TextLabel")
-    TimeLabel.Name = "BeijingTime"
-    TimeLabel.Size = UDim2.new(0, 80, 0, 36)
-    TimeLabel.Position = UDim2.new(0.46, 0, 0.075, 0)
-    TimeLabel.BackgroundTransparency = 1
-    TimeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TimeLabel.TextScaled = true
-    TimeLabel.Font = Enum.Font.SourceSansBold
-    TimeLabel.Text = getBeijingTime()
-    TimeLabel.Parent = parentGui
-end)
-
-if not success then
-    warn("无法插入北京时间：" .. tostring(err))
-end
