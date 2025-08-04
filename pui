@@ -262,6 +262,24 @@ DRR["26"]["AspectRatio"] = 0.9836804866790771;
 DRR["27"] = Instance.new("UIAspectRatioConstraint", DRR["2"]);
 DRR["27"]["AspectRatio"] = 5.724700927734375;
 
+
+-- 修改 MainBar 背景为图片
+do
+    local mainBar = DRR["28"]
+    if mainBar then
+        mainBar.BackgroundTransparency = 1 -- 隐藏背景色
+
+        local backgroundImage = Instance.new("ImageLabel")
+        backgroundImage.Name = "BackgroundImage"
+        backgroundImage.Size = UDim2.new(1, 0, 1, 0)
+        backgroundImage.Position = UDim2.new(0, 0, 0, 0)
+        backgroundImage.BackgroundTransparency = 1
+        backgroundImage.Image = "rbxassetid://122245873500684"
+        backgroundImage.ScaleType = Enum.ScaleType.Stretch
+        backgroundImage.Parent = mainBar
+    end
+end
+
 -- DrRay.MainBar
 DRR["28"] = Instance.new("Frame", DRR["1"]);
 DRR["28"]["BorderSizePixel"] = 0;
