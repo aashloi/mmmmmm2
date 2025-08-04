@@ -346,6 +346,24 @@ DRR["2f"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.f
 DRR["30"] = Instance.new("Folder", DRR["1"]);
 
 
+
+-- 修改 TabReserved 背景为图片
+do
+    local tab = DRR["31"]
+    if tab then
+        tab.BackgroundTransparency = 1 -- 隐藏原背景
+        local img = Instance.new("ImageLabel")
+        img.Name = "BackgroundImage"
+        img.Size = UDim2.new(1, 0, 1, 0)
+        img.Position = UDim2.new(0, 0, 0, 0)
+        img.BackgroundTransparency = 1
+        img.Image = "rbxassetid://122245873500684"
+        img.ScaleType = Enum.ScaleType.Stretch
+        img.ZIndex = -1
+        img.Parent = tab
+    end
+end
+
 -- DrRay.Folder.TabReserved
 DRR["31"] = Instance.new("ScrollingFrame", DRR["30"]);
 DRR["31"]["Active"] = true;
