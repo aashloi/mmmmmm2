@@ -1301,9 +1301,6 @@ function UILIB:Load(name, img, direction)
 			task.wait(0.3)
 			tw2:Play()
 	end)
-function UILIB:Load(name, img, direction)
-    -- ... 其他代码 ...
-    
     task.spawn(function()
         while true do
             task.wait(0.1)
