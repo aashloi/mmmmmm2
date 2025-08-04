@@ -1788,10 +1788,18 @@ end;
 };
 
 return require(DRR["93"]);
--- 延迟隐藏 Clock，确保 UI 加载完成后再隐藏
-task.delay(1, function()
-    local clock = DRR and DRR["17"]
-    if clock then
-        clock.Visible = false
+-- 替换 Clock 显示为使用时长计时器
+local startTime = os.clock()
+
+task.spawn(function()
+    while true do
+        task.wait(1)
+        local clock = DRR and DRR["1a"]
+        if clock and clock:IsA("TextLabel") then
+            local elapsed = math.floor(os.clock() - startTime)
+            local mins = math.floor(elapsed / 60)
+            local secs = elapsed % 60
+            clock.Text = string.format("已使用 %02d:%02d", mins, secs)
+        end
     end
 end)
