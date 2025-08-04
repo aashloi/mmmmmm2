@@ -8,6 +8,66 @@ DRR["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
 DRR["1"]["Name"] = [[DrRay]];
 DRR["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
+-- 安全模式插入 ThemeButton（确保加载）
+local ThemeColors = {
+    { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
+    { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
+    { name = "黑色", background = Color3.fromRGB(15, 15, 15), text = Color3.fromRGB(255, 255, 255) },
+    { name = "粉色", background = Color3.fromRGB(255, 182, 193), text = Color3.fromRGB(80, 0, 80) },
+    { name = "金色", background = Color3.fromRGB(255, 223, 0), text = Color3.fromRGB(102, 51, 0) },
+    { name = "红色", background = Color3.fromRGB(255, 69, 58), text = Color3.fromRGB(255, 255, 255) },
+    { name = "紫色", background = Color3.fromRGB(128, 0, 128), text = Color3.fromRGB(230, 230, 255) },
+    { name = "绿色", background = Color3.fromRGB(0, 200, 83), text = Color3.fromRGB(255, 255, 255) },
+    { name = "灰色", background = Color3.fromRGB(128, 128, 128), text = Color3.fromRGB(0, 0, 0) },
+}
+
+local themeIndex = 1
+
+local parentGui = nil
+pcall(function()
+    parentGui = DRR["1"].TopBar.ProfileMenu
+end)
+
+if not parentGui then
+    parentGui = DRR["1"]
+end
+
+local ThemeButton = Instance.new("TextButton")
+ThemeButton.Name = "ThemeButton"
+ThemeButton.Size = UDim2.new(0, 32, 0, 32)
+ThemeButton.Position = UDim2.new(0.94, 0, 0.05, 0)
+ThemeButton.BackgroundColor3 = ThemeColors[1].background
+ThemeButton.TextColor3 = ThemeColors[1].text
+ThemeButton.TextScaled = true
+ThemeButton.Text = "🎨"
+ThemeButton.Font = Enum.Font.SourceSansBold
+ThemeButton.BorderSizePixel = 0
+ThemeButton.ZIndex = 999
+ThemeButton.Parent = parentGui
+
+-- 应用主题
+local function applyTheme(guiObject, bgColor, textColor)
+    if guiObject:IsA("Frame") or guiObject:IsA("TextButton") or guiObject:IsA("ImageButton") then
+        guiObject.BackgroundColor3 = bgColor
+    end
+    if guiObject:IsA("TextLabel") or guiObject:IsA("TextButton") or guiObject:IsA("TextBox") then
+        guiObject.TextColor3 = textColor
+    end
+    for _, child in ipairs(guiObject:GetChildren()) do
+        applyTheme(child, bgColor, textColor)
+    end
+end
+
+ThemeButton.MouseButton1Click:Connect(function()
+    themeIndex = themeIndex + 1
+    if themeIndex > #ThemeColors then
+        themeIndex = 1
+    end
+    local current = ThemeColors[themeIndex]
+    applyTheme(DRR["1"], current.background, current.text)
+end)
+
+
 -- DrRay.TopBar
 DRR["2"] = Instance.new("Frame", DRR["1"]);
 DRR["2"]["BorderSizePixel"] = 0;
@@ -167,41 +227,6 @@ DRR["15"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
 -- DrRay.TopBar.ProfileMenu.UIPadding
 DRR["16"] = Instance.new("UIPadding", DRR["c"]);
 DRR["16"]["PaddingLeft"] = UDim.new(0.014000000432133675, 0);
-
--- DrRay.TopBar.ProfileMenu.Clock
-DRR["17"] = Instance.new("ImageButton", DRR["c"]);
-DRR["17"]["BorderSizePixel"] = 0;
-DRR["17"]["AutoButtonColor"] = false;
-DRR["17"]["BackgroundColor3"] = Color3.fromRGB(42, 42, 58);
-DRR["17"]["Size"] = UDim2.new(0.10328257083892822, 0, 0.682426393032074, 0);
-DRR["17"]["Name"] = [[Clock]];
-DRR["17"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-DRR["17"]["Position"] = UDim2.new(0.26031631231307983, 0, 0.158786803483963, 0);
-
--- DrRay.TopBar.ProfileMenu.Clock.UICorner
-DRR["18"] = Instance.new("UICorner", DRR["17"]);
-DRR["18"]["CornerRadius"] = UDim.new(0.30000001192092896, 0);
-
--- DrRay.TopBar.ProfileMenu.Clock.UIGradient
-DRR["19"] = Instance.new("UIGradient", DRR["17"]);
-DRR["19"]["Rotation"] = 90;
-DRR["19"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(154, 154, 154)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(231, 231, 231))};
-
--- DrRay.TopBar.ProfileMenu.Clock.TextLabel
-DRR["1a"] = Instance.new("TextLabel", DRR["17"]);
-DRR["1a"]["TextWrapped"] = true;
-DRR["1a"]["BorderSizePixel"] = 0;
-DRR["1a"]["TextScaled"] = true;
-DRR["1a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-DRR["1a"]["FontFace"] = Font.new([[rbxassetid://11702779517]], Enum.FontWeight.SemiBold, Enum.FontStyle.Normal);
-DRR["1a"]["TextSize"] = 14;
-DRR["1a"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-DRR["1a"]["AutomaticSize"] = Enum.AutomaticSize.X;
-DRR["1a"]["Size"] = UDim2.new(0.33195531368255615, 0, 0.41530051827430725, 0);
-DRR["1a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-DRR["1a"]["Text"] = [[00:00]];
-DRR["1a"]["BackgroundTransparency"] = 1;
-DRR["1a"]["Position"] = UDim2.new(0.21512815356254578, 0, 0.27320244908332825, 0);
 
 -- DrRay.TopBar.ProfileMenu.Title
 DRR["1b"] = Instance.new("ImageButton", DRR["c"]);
@@ -1788,8 +1813,3 @@ end;
 };
 
 return require(DRR["93"]);
-
-
--- 删除时间显示控件和相关代码
-if DRR["17"] then DRR["17"]:Destroy() end  -- 删除时钟控件
-if DRR["1a"] then DRR["1a"]:Destroy() end  -- 删除时钟文本标签
