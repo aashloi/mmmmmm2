@@ -1788,12 +1788,3 @@ end;
 };
 
 return require(DRR["93"]);
-
--- 实时更新时间功能（每秒刷新）
-task.spawn(function()
-    while true do
-        local now = os.time()
-        Clock.Text = os.date("%H:%M", now)
-        task.wait(1)
-    end
-end)
