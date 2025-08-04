@@ -1755,24 +1755,25 @@ end;
 return require(DRR["93"]);
 
 
--- 主题切换按钮
-local ThemeColors = {
-    { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
-    { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
-    { name = "黑色", background = Color3.fromRGB(15, 15, 15), text = Color3.fromRGB(255, 255, 255) },
-    { name = "粉色", background = Color3.fromRGB(255, 182, 193), text = Color3.fromRGB(80, 0, 80) },
-    { name = "金色", background = Color3.fromRGB(255, 223, 0), text = Color3.fromRGB(102, 51, 0) },
-    { name = "红色", background = Color3.fromRGB(255, 69, 58), text = Color3.fromRGB(255, 255, 255) },
-    { name = "紫色", background = Color3.fromRGB(128, 0, 128), text = Color3.fromRGB(230, 230, 255) },
-    { name = "绿色", background = Color3.fromRGB(0, 200, 83), text = Color3.fromRGB(255, 255, 255) },
-    { name = "灰色", background = Color3.fromRGB(128, 128, 128), text = Color3.fromRGB(0, 0, 0) },
-}
+-- 主题切换按钮，适配注入器环境：等待 UI 加载后插入
+task.spawn(function()
+    local ThemeColors = {
+        { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
+        { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
+        { name = "黑色", background = Color3.fromRGB(15, 15, 15), text = Color3.fromRGB(255, 255, 255) },
+        { name = "粉色", background = Color3.fromRGB(255, 182, 193), text = Color3.fromRGB(80, 0, 80) },
+        { name = "金色", background = Color3.fromRGB(255, 223, 0), text = Color3.fromRGB(102, 51, 0) },
+        { name = "红色", background = Color3.fromRGB(255, 69, 58), text = Color3.fromRGB(255, 255, 255) },
+        { name = "紫色", background = Color3.fromRGB(128, 0, 128), text = Color3.fromRGB(230, 230, 255) },
+        { name = "绿色", background = Color3.fromRGB(0, 200, 83), text = Color3.fromRGB(255, 255, 255) },
+        { name = "灰色", background = Color3.fromRGB(128, 128, 128), text = Color3.fromRGB(0, 0, 0) },
+    }
 
-local themeIndex = 1
-local topBar = DRR["1"]:FindFirstChild("TopBar")
-local profileMenu = topBar and topBar:FindFirstChild("ProfileMenu")
+    local themeIndex = 1
 
-if profileMenu then
+    repeat wait() until DRR and DRR["1"] and DRR["1"]:FindFirstChild("TopBar") and DRR["1"].TopBar:FindFirstChild("ProfileMenu")
+    local profileMenu = DRR["1"].TopBar.ProfileMenu
+
     local ThemeButton = Instance.new("TextButton")
     ThemeButton.Name = "ThemeButton"
     ThemeButton.Size = UDim2.new(0, 32, 0, 32)
@@ -1806,4 +1807,4 @@ if profileMenu then
         local current = ThemeColors[themeIndex]
         applyTheme(DRR["1"], current.background, current.text)
     end)
-end
+end)
