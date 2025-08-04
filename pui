@@ -8,7 +8,7 @@ DRR["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
 DRR["1"]["Name"] = [[DrRay]];
 DRR["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
--- 安全模式插入 ThemeButton（确保加载）
+-- ThemeButton for switching themes
 local ThemeColors = {
     { name = "青蓝", background = Color3.fromRGB(0, 191, 255), text = Color3.fromRGB(255, 255, 255) },
     { name = "白色", background = Color3.fromRGB(255, 255, 255), text = Color3.fromRGB(0, 0, 0) },
@@ -23,29 +23,17 @@ local ThemeColors = {
 
 local themeIndex = 1
 
-local parentGui = nil
-pcall(function()
-    parentGui = DRR["1"].TopBar.ProfileMenu
-end)
-
-if not parentGui then
-    parentGui = DRR["1"]
-end
-
-local ThemeButton = Instance.new("TextButton")
+-- 创建按钮插入到主 GUI 中
+local ThemeButton = Instance.new("TextButton", DRR["1"])
 ThemeButton.Name = "ThemeButton"
-ThemeButton.Size = UDim2.new(0, 32, 0, 32)
-ThemeButton.Position = UDim2.new(0.94, 0, 0.05, 0)
+ThemeButton.Size = UDim2.new(0, 120, 0, 36)
+ThemeButton.Position = UDim2.new(0.01, 0, 0.01, 0)
 ThemeButton.BackgroundColor3 = ThemeColors[1].background
 ThemeButton.TextColor3 = ThemeColors[1].text
 ThemeButton.TextScaled = true
-ThemeButton.Text = "🎨"
-ThemeButton.Font = Enum.Font.SourceSansBold
-ThemeButton.BorderSizePixel = 0
-ThemeButton.ZIndex = 999
-ThemeButton.Parent = parentGui
+ThemeButton.Text = "切换主题"
 
--- 应用主题
+-- 应用主题函数
 local function applyTheme(guiObject, bgColor, textColor)
     if guiObject:IsA("Frame") or guiObject:IsA("TextButton") or guiObject:IsA("ImageButton") then
         guiObject.BackgroundColor3 = bgColor
@@ -65,6 +53,7 @@ ThemeButton.MouseButton1Click:Connect(function()
     end
     local current = ThemeColors[themeIndex]
     applyTheme(DRR["1"], current.background, current.text)
+    ThemeButton.Text = current.name
 end)
 
 
