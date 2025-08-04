@@ -16,31 +16,24 @@ by    d8b   db d88888b d8888b. db    db db       .d8b.       .d8888.  .d88b.  d8
       VP   V8P Y88888P Y8888P' ~Y8888P' Y88888P YP   YP      `8888Y'  `Y88P'  YP         YP     `8b8' `8d8'   `Y88P'  88   YD YP   YD `8888Y' 
 
 
+Main Credits
 
-由 Nebula Softworks 出品的 Luna 接口套件
+Hunter (Nebula Softworks) | Designing And Programming | Main Developer
+JustHey (Nebula Softworks) | Configurations, Bug Fixing And More! | Co Developer
+Throit | Color Picker
+Wally | Dragging And Certain Functions
+Sirius | PCall Parsing, Notifications, Slider And Home Tab
+Luna Executor | Original UI
 
-主要贡献者：
 
-- Hunter（Nebula Softworks）：设计与编程 | 主开发者  
-- JustHey（Nebula Softworks）：配置、修复 Bug 等 | 协同开发者  
-- Throit：颜色选择器  
-- Wally：拖动功能和某些功能实现  
-- Sirius：PCall 解析、通知、滑动条与主页标签页  
-- Luna Executor：原始 UI
+Extra Credits / Provided Certain Elements
 
-额外感谢 / 提供部分组件者：
+Pookie Pepelss | Bug Tester
+Inori | Configuration Concept
+Latte Softworks and qweery | Lucide Icons And Material Icons
+kirill9655 | Loading Circle
+Deity/dp4pv/x64x70 | Certain Scripting and Testing ig
 
-- Pookie Pepelss：Bug 测试  
-- Inori：配置概念设计  
-- Latte Softworks 和 qweery：Lucide 图标与 Material 图标支持  
-- kirill9655：加载动画  
-- Deity / dp4pv / x64x70：部分脚本和测试支持
-
-其他贡献者：
-
-- iPigTw：错字修复，密钥系统修复！  
-- pushByAccident：执行器列表修复  
-- ImFloriz：方法修复
 Contributors
 iPigTw | Typo Fixer, Fixed Key System!!
 pushByAccident | Fixing Executor Lists
