@@ -24,10 +24,10 @@ local ThemeColors = {
 local themeIndex = 1
 
 -- 创建按钮插入到主 GUI 中
-local ThemeButton = Instance.new("TextButton", DRR["1"])
+local ThemeButton = Instance.new("TextButton", DRR["1"].TopBar.ProfileMenu)
 ThemeButton.Name = "ThemeButton"
-ThemeButton.Size = UDim2.new(0, 120, 0, 36)
-ThemeButton.Position = UDim2.new(0.01, 0, 0.01, 0)
+ThemeButton.Size = UDim2.new(0, 100, 0, 30)
+ThemeButton.Position = UDim2.new(0.61, 0, 0.1, 0)
 ThemeButton.BackgroundColor3 = ThemeColors[1].background
 ThemeButton.TextColor3 = ThemeColors[1].text
 ThemeButton.TextScaled = true
