@@ -1301,17 +1301,12 @@ function UILIB:Load(name, img, direction)
 			task.wait(0.3)
 			tw2:Play()
 	end)
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        -- 获取当前UTC时间
-        local utcTime = os.time()
-        -- 转换为北京时间 (UTC+8)
-        local beijingTime = utcTime + 8 * 60 * 60
-        -- 格式化为北京时间的小时和分钟
-        parent.TopBar.ProfileMenu.Clock.TextLabel.Text = os.date("%H:%M", beijingTime)
-    end
-end)
+        task.spawn(function()
+	     while true do
+		task.wait(0.1)
+		parent.TopBar.ProfileMenu.Clock.TextLabel.Text = os.date("%H:%m")
+	     end
+        end)
 	parent.TopBar.ProfileMenu.Title.TextLabel.Text = name
 	if img then
 		parent.MainBar.Logo.Image = img
