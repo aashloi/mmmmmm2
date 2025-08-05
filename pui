@@ -25,16 +25,16 @@ DRR["3"]["CornerRadius"] = UDim.new(0.10000000149011612, 0);
 -- DrRay.TopBar.ScrollingFrame
 DRR["4"] = Instance.new("ScrollingFrame", DRR["2"]);
 DRR["4"]["Active"] = true;
-DRR["4"]["ScrollingDirection"] = Enum.ScrollingDirection.XY; -- 启用水平和垂直滚动
+DRR["4"]["ScrollingDirection"] = Enum.ScrollingDirection.Y;
 DRR["4"]["BorderSizePixel"] = 0;
-DRR["4"]["CanvasSize"] = UDim2.new(0, 0, 2, 0); -- 增加垂直可滚动区域
+DRR["4"]["CanvasSize"] = UDim2.new(0.10000000149011612, 0, 0, 0);
 DRR["4"]["BackgroundColor3"] = Color3.fromRGB(26, 26, 36);
-DRR["4"]["AutomaticCanvasSize"] = Enum.AutomaticSize.XY; -- 自动调整画布大小
+DRR["4"]["AutomaticCanvasSize"] = Enum.AutomaticSize.X;
 DRR["4"]["BackgroundTransparency"] = 1;
 DRR["4"]["Size"] = UDim2.new(0.915977954864502, 0, 0.5196850299835205, 0);
-DRR["4"]["ScrollBarImageColor3"] = Color3.fromRGB(100, 100, 100); -- 滚动条颜色
+DRR["4"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
 DRR["4"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-DRR["4"]["ScrollBarThickness"] = 5; -- 滚动条厚度
+DRR["4"]["ScrollBarThickness"] = 0;
 DRR["4"]["Position"] = UDim2.new(0, 0, 0.4803149700164795, 0);
 
 -- DrRay.TopBar.ScrollingFrame.UIListLayout
@@ -266,7 +266,7 @@ DRR["27"]["AspectRatio"] = 5.724700927734375;
 DRR["28"] = Instance.new("Frame", DRR["1"]);
 DRR["28"]["BorderSizePixel"] = 0;
 DRR["28"]["BackgroundColor3"] = Color3.fromRGB(42, 42, 58);
-DRR["28"]["Size"] = UDim2.new(0.5404488444328308, 0, 0.7, 0); -- 增加高度以容纳更多内容
+DRR["28"]["Size"] = UDim2.new(0.5404488444328308, 0, 0.5745577812194824, 0);
 DRR["28"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 DRR["28"]["Position"] = UDim2.new(0.23000000417232513, 0, -0.6119999885559082, 0);
 DRR["28"]["Name"] = [[MainBar]];
@@ -332,15 +332,15 @@ DRR["30"] = Instance.new("Folder", DRR["1"]);
 DRR["31"] = Instance.new("ScrollingFrame", DRR["30"]);
 DRR["31"]["Active"] = true;
 DRR["31"]["BorderSizePixel"] = 0;
-DRR["31"]["CanvasSize"] = UDim2.new(0, 0, 2, 0); -- 增加垂直可滚动区域
+DRR["31"]["CanvasSize"] = UDim2.new(0, 0, 0, 0);
 DRR["31"]["BackgroundColor3"] = Color3.fromRGB(26, 26, 36);
 DRR["31"]["VerticalScrollBarPosition"] = Enum.VerticalScrollBarPosition.Left;
-DRR["31"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y; -- 自动调整画布大小
+DRR["31"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y;
 DRR["31"]["BackgroundTransparency"] = 1;
 DRR["31"]["Size"] = UDim2.new(1, 0, 0.9599999785423279, 0);
-DRR["31"]["ScrollBarImageColor3"] = Color3.fromRGB(100, 100, 100); -- 滚动条颜色
+DRR["31"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
 DRR["31"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-DRR["31"]["ScrollBarThickness"] = 5; -- 滚动条厚度
+DRR["31"]["ScrollBarThickness"] = 0;
 DRR["31"]["Position"] = UDim2.new(0, 0, 0.03999999910593033, 0);
 DRR["31"]["Visible"] = false;
 DRR["31"]["Name"] = [[TabReserved]];
@@ -1396,3 +1396,360 @@ function UILIB:Load(name, img, direction)
 	end
 
 end
+
+
+
+
+
+
+
+
+
+
+
+function UILIB.newTab(name, img)	
+	local self = setmetatable({}, UILIB)
+
+	local newTab = parent.Folder.TabReserved:Clone()
+	newTab.Parent = parent.MainBar
+	newTab.Name = name
+	newTab.Visible = false
+
+	local newTabBtn = parent.Folder.TabButtonReserved:Clone()
+	newTabBtn.Parent = parent.TopBar.ScrollingFrame
+	newTabBtn.Name = name or "Tab"..#parent.MainBar:GetChildren() - 4
+	newTabBtn.Frame.TextLabel.Text = name
+	if img then
+		newTabBtn.ImageLabel.Image = img
+	else
+		newTabBtn.ImageLabel.Image = ""
+	end
+	newTabBtn.Visible = true
+
+	newTabBtn.MouseButton1Click:Connect(function()
+		for i,v in pairs(parent.TopBar.ScrollingFrame:GetChildren()) do
+			if v:IsA("ImageButton") then
+				local vTab = parent.MainBar:FindFirstChild(v.Name)
+				if v.Name ~= name then
+					local twBtn = twServ:Create(v, TweenInfo.new(0.2), { Transparency = 0.75})
+
+					twBtn:Play()
+
+					vTab.Visible = false
+				elseif v.Name == name then
+					vTab.Visible = true
+					local twBtn = twServ:Create(v, TweenInfo.new(0.2), { Transparency = 0 })
+
+					twBtn:Play()
+
+				end
+
+			end
+		end
+	end)
+
+	function self.newButton(name, desc, func)
+		local newbtn = reserved.Button:Clone()
+		newbtn.Parent = newTab
+		newbtn.Title.Text = name
+		newbtn.Description.Text = desc
+		newbtn.Visible = true
+		newbtn.Name = name
+
+		newbtn.MouseEnter:Connect(function()
+			local twBtn = twServ:Create(newbtn, TweenInfo.new(0.2), { Transparency = 0 })
+
+			twBtn:Play()
+		end)
+		newbtn.MouseLeave:Connect(function()
+			local twBtn = twServ:Create(newbtn, TweenInfo.new(0.2), { Transparency = 0.4 })
+
+			twBtn:Play()
+		end)
+		newbtn.MouseButton1Click:Connect(func)
+	end
+
+	function self.newLabel(text)
+		local newLabel = reserved.Label:Clone()
+		newLabel.Parent = newTab
+		newLabel.Visible = true
+		newLabel.Title.Text = text
+
+		return newLabel.Title
+	end
+
+        function self.editLabel(newLabel, text)
+		newLabel.Parent = newTab
+		newLabel.Visible = true
+		newLabel.Title.Text = text
+
+		return newLabel.Title
+        end
+
+	function self.newInput(name, desc, func)
+		local newInput = reserved.Textbox:Clone()
+		local textbox = newInput.TextboxBar.ActualTextbox
+
+		newInput.MouseEnter:Connect(function()
+			local twBtn = twServ:Create(newInput, TweenInfo.new(0.2), { Transparency = 0 })
+
+			twBtn:Play()
+		end)
+		newInput.MouseLeave:Connect(function()
+			local twBtn = twServ:Create(newInput, TweenInfo.new(0.2), { Transparency = 0.4 })
+
+			twBtn:Play()
+
+
+		end)
+
+		newInput.Visible = true
+		newInput.Parent = newTab
+		newInput.Title.Text = name
+		newInput.Description.Text = desc
+		newInput.Name = name
+
+		textbox.FocusLost:Connect(function()
+			func(textbox.Text)
+		end)
+
+	end
+
+	function self.newKeybind(name, desc, func)
+		local newKey = reserved.Keybind:Clone()
+
+
+		newKey.MouseEnter:Connect(function()
+			local twBtn = twServ:Create(newKey, TweenInfo.new(0.2), { Transparency = 0 })
+
+			twBtn:Play()
+		end)
+		newKey.MouseLeave:Connect(function()
+			local twBtn = twServ:Create(newKey, TweenInfo.new(0.2), { Transparency = 0.4 })
+
+			twBtn:Play()
+		end)
+		newKey.Parent = newTab
+		newKey.Title.Text = name
+		newKey.Name = name
+		newKey.Description.Text = desc
+		newKey.Visible =  true
+
+		local listening = false
+		local a
+
+		newKey.Bind.Button.MouseButton1Click:Connect(function()
+			listening = true
+
+
+			local function Loop()
+				if listening then
+					newKey.Bind.Button.Text = "."
+				end
+
+				task.wait(0.5)
+				if listening then
+					newKey.Bind.Button.Text = ".."
+				end
+				task.wait(0.5)
+				if listening then
+					newKey.Bind.Button.Text = "..."
+				end
+				task.wait(0.5)
+			end
+
+			task.spawn(function()
+				while listening do
+					Loop()
+				end
+			end)
+
+			-- Connect the InputBegan event
+			a = game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
+				if input.UserInputType == Enum.UserInputType.Keyboard then
+					newKey.Bind.Button.Text = input.KeyCode.Name
+					listening = false
+					a:Disconnect()
+					func(input)
+				elseif input.UserInputType == Enum.UserInputType.MouseButton1 or
+					input.UserInputType == Enum.UserInputType.MouseButton2 or
+					input.UserInputType == Enum.UserInputType.MouseButton3 then
+					newKey.Bind.Button.Text = input.UserInputType.Name
+					listening = false
+					a:Disconnect()
+					func(input)
+				end
+			end)
+		end)
+	end
+
+
+	function self.newSlider(name, desc, max, manageSlider, func)
+		local newSlider = reserved.Slider:Clone()
+
+		newSlider.MouseEnter:Connect(function()
+			local twBtn = twServ:Create(newSlider, TweenInfo.new(0.2), { Transparency = 0 })
+
+			twBtn:Play()
+		end)
+		newSlider.MouseLeave:Connect(function()
+			local twBtn = twServ:Create(newSlider, TweenInfo.new(0.2), { Transparency = 0.4 })
+
+			twBtn:Play()
+		end)
+		newSlider.Visible = true
+		newSlider.Name = name
+		newSlider.Parent = newTab
+		newSlider.Title.Text = name
+		newSlider.Description.Text = desc
+
+		local Mouse = game.Players.LocalPlayer:GetMouse()
+		local tweenServ = twServ
+
+		local Trigger = newSlider.ActualSlider.Trigger
+		local Label = newSlider.ActualSlider.Title
+		local Fill = newSlider.ActualSlider.Fill
+		local Parent = newSlider.ActualSlider
+
+		local perc
+		local Percent
+		local MouseDown = false
+		local delayTw = 0.3
+
+		local function Update()
+			MouseDown = true
+			repeat
+				task.wait()
+				Percent = math.clamp((Mouse.X - Parent.AbsolutePosition.X) / Parent.AbsoluteSize.X, 0, 1)
+				perc = math.round(Percent * max)
+				if manageSlider == false then
+					Label.Text = perc
+					func(perc)
+				elseif manageSlider == true then
+					Label.Text = perc
+					func(perc, Label)
+				end
+				local tween = tweenServ:Create(Fill, TweenInfo.new(delayTw, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.fromScale(Percent, 1) })
+				tween:Play()
+			until MouseDown == false
+		end
+
+		Trigger.MouseButton1Down:Connect(Update)
+
+		UIS.InputEnded:Connect(function(input)
+			if input.UserInputType ==  Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				MouseDown = false
+			end
+		end)
+
+	end
+	
+	function self.newToggle(title, desc, toggle, func)
+		local realToggle = toggle
+		local newToggle = reserved.Toggle:Clone()
+		newToggle.Parent = newTab
+		newToggle.Name = title
+		newToggle.Visible = true
+		newToggle.Title.Text = title
+		newToggle.Description.Text = desc
+		
+		
+		newToggle.MouseEnter:Connect(function()
+			local twBtn = twServ:Create(newToggle, TweenInfo.new(0.2), { Transparency = 0 })
+
+			twBtn:Play()
+		end)
+		newToggle.MouseLeave:Connect(function()
+			local twBtn = twServ:Create(newToggle, TweenInfo.new(0.2), { Transparency = 0.4 })
+
+			twBtn:Play()
+		end)
+		
+		
+		if realToggle == true then
+			newToggle.Label.BackgroundColor3 = GlobalColor2
+		elseif realToggle == false then
+			newToggle.Label.BackgroundColor3 = GlobalColor1
+		end
+		
+		
+		
+		newToggle.Label.Label.MouseButton1Click:Connect(function()
+			
+			if realToggle == true then
+				realToggle = false
+				local twColorOn = twServ:Create(newToggle.Label, TweenInfo.new(0.2), { BackgroundColor3 = GlobalColor1 })
+				twColorOn:Play()
+				
+				func(realToggle)
+			elseif realToggle == false then
+				realToggle = true
+				local twColorOn = twServ:Create(newToggle.Label, TweenInfo.new(0.2), { BackgroundColor3 = GlobalColor2 })
+				twColorOn:Play()
+				
+				func(realToggle)
+			end
+		end)
+		
+	end
+	
+	function self.newDropdown(name, desc, listTable, func)
+		local newdd = reserved.Dropdown:Clone()
+		newdd.Visible = true
+		newdd.Parent = newTab
+		
+		newdd.Name = name
+		newdd.Title.Text = name
+		newdd.Description.Text = desc
+		
+		for i, list in ipairs(listTable) do
+			local newddbtn = reserved.DropdownButton:Clone()
+			newddbtn.Visible = true
+			newddbtn.Parent = newdd.Box.ScrollingFrame
+
+			newddbtn.Name = list
+			newddbtn.name.Text = list
+			task.spawn(function()
+				newddbtn.MouseButton1Click:Connect(function()
+					newdd.DropdownBar.Open.Text = list
+					local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,0, 0)})
+					twPos:Play()
+					twPos.Completed:Wait()
+					newdd.Box.Visible = false
+					func(list)
+				end)
+			end)
+		end		
+		
+		newdd.DropdownBar.Trigger.MouseButton1Click:Connect(function()
+			
+			
+			if newdd.Box.Visible == false then
+				newdd.Box.Visible = true
+				local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,1.696, 0)})
+				twPos:Play()
+			elseif newdd.Box.Visible == true then
+				local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,0, 0)})
+				twPos:Play()
+				twPos.Completed:Wait()
+				newdd.Box.Visible = false
+			end
+		end)
+	end
+
+	return self
+end
+
+
+
+
+
+
+
+
+return UILIB
+
+end;
+};
+
+return require(DRR["93"]);
