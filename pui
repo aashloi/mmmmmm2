@@ -23,30 +23,20 @@ DRR["3"] = Instance.new("UICorner", DRR["2"]);
 DRR["3"]["CornerRadius"] = UDim.new(0.10000000149011612, 0);
 
 -- DrRay.TopBar.ScrollingFrame
--- 假设 DRR["4"] 是 Tab ScrollingFrame，DRR["5"] 是 UIListLayout 容器
-
--- 启用水平滚动
-DRR["4"].ScrollingDirection = Enum.ScrollingDirection.X
-DRR["4"].ScrollBarThickness = 5
-DRR["4"].ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
-DRR["4"].ScrollBarImageTransparency = 0.5
-
--- 初始 CanvasSize（滚动区域）值
-DRR["4"].CanvasSize = UDim2.new(0, 0, 0, 40)
-
--- 设置标签按钮排列方式（保持横向）
-DRR["5"].FillDirection = Enum.FillDirection.Horizontal
-DRR["5"].SortOrder = Enum.SortOrder.LayoutOrder
-DRR["5"].Padding = UDim.new(0, 5)
-
--- 自动根据按钮数量更新 CanvasSize
-DRR["5"]:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    DRR["4"].CanvasSize = UDim2.new(0, DRR["5"].AbsoluteContentSize.X + 10, 0, 40)
-end)
-
--- 示例：每个标签按钮应设置固定宽度（避免堆叠）
--- local tabButton = Instance.new("TextButton", DRR["5"])
--- tabButton.Size = UDim2.new(0, 100, 1, 0)
+DRR["4"] = Instance.new("ScrollingFrame", DRR["2"]);
+DRR["4"]["Active"] = true;
+DRR["4"]["ScrollingDirection"] = Enum.ScrollingDirection.XY;
+DRR["4"]["BorderSizePixel"] = 0;
+DRR["4"]["CanvasSize"] = UDim2.new(0, 0, 0, 0);
+DRR["4"]["BackgroundColor3"] = Color3.fromRGB(26, 26, 36);
+DRR["4"]["AutomaticCanvasSize"] = Enum.AutomaticSize.X;
+DRR["4"]["BackgroundTransparency"] = 1;
+DRR["4"]["Size"] = UDim2.new(0.915977954864502, 0, 0.5196850299835205, 0);
+DRR["4"]["ScrollBarImageColor3"] = Color3.fromRGB(100, 100, 100);
+DRR["4"]["ScrollBarImageTransparency"] = 0.5;
+DRR["4"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+DRR["4"]["ScrollBarThickness"] = 5;
+DRR["4"]["Position"] = UDim2.new(0, 0, 0.4803149700164795, 0);
 
 -- DrRay.TopBar.ScrollingFrame.UIListLayout
 DRR["5"] = Instance.new("UIListLayout", DRR["4"]);
