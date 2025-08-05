@@ -23,15 +23,33 @@ DRR["3"] = Instance.new("UICorner", DRR["2"]);
 DRR["3"]["CornerRadius"] = UDim.new(0.10000000149011612, 0);
 
 -- DrRay.TopBar.ScrollingFrame
+DRR["4"] = Instance.new("ScrollingFrame", DRR["2"])
+DRR["4"].Name = "TabBar"
+DRR["4"].Active = true
+DRR["4"].BackgroundTransparency = 1
+DRR["4"].BorderSizePixel = 0
+DRR["4"].BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+DRR["4"].Size = UDim2.new(1, 0, 0, 40) -- 高度要小
+DRR["4"].Position = UDim2.new(0, 0, 0, 30) -- 放在标题栏下
+DRR["4"].ScrollingDirection = Enum.ScrollingDirection.X
+DRR["4"].CanvasSize = UDim2.new(0, 0, 0, 40)
+DRR["4"].ScrollBarThickness = 4
+
 local layout = Instance.new("UIListLayout", DRR["4"])
 layout.FillDirection = Enum.FillDirection.Horizontal
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Padding = UDim.new(0, 5)
 
--- 自动更新 CanvasSize
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    DRR["4"].CanvasSize = UDim2.new(0, layout.AbsoluteContentSize.X, 0, 0)
+    DRR["4"].CanvasSize = UDim2.new(0, layout.AbsoluteContentSize.X, 0, 40)
 end)
+
+local tabButton = Instance.new("TextButton", DRR["4"])
+tabButton.Size = UDim2.new(0, 100, 1, 0)  -- 横向固定宽度，垂直占满
+tabButton.Text = "Tab 1"
+tabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+tabButton.TextColor3 = Color3.new(1, 1, 1)
+
 
 -- DrRay.TopBar.ScrollingFrame.UIListLayout
 DRR["5"] = Instance.new("UIListLayout", DRR["4"]);
