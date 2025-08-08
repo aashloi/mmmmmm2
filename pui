@@ -1693,68 +1693,52 @@ function UILIB.newTab(name, img)
 		
 	end
 	
-function self.newDropdown(name, desc, listTable, func)
-    local newdd = reserved.Dropdown:Clone()
-    newdd.Visible = true
-    newdd.Parent = newTab
-    
-    newdd.Name = name
-    newdd.Title.Text = name
-    newdd.Description.Text = desc
+	function self.newDropdown(name, desc, listTable, func)
+		local newdd = reserved.Dropdown:Clone()
+		newdd.Visible = true
+		newdd.Parent = newTab
+		
+		newdd.Name = name
+		newdd.Title.Text = name
+		newdd.Description.Text = desc
+		
+		for i, list in ipairs(listTable) do
+			local newddbtn = reserved.DropdownButton:Clone()
+			newddbtn.Visible = true
+			newddbtn.Parent = newdd.Box.ScrollingFrame
 
-    -- 为新创建的下拉菜单对象定义一个 :Update() 方法
-    function newdd:Update(newListTable, callback)
-        local scrollingFrame = self.Box.ScrollingFrame
-        
-        -- 清除旧的选项按钮
-        for _, child in ipairs(scrollingFrame:GetChildren()) do
-            if child:IsA("TextButton") then
-                child:Destroy()
-            end
-        end
+			newddbtn.Name = list
+			newddbtn.name.Text = list
+			task.spawn(function()
+				newddbtn.MouseButton1Click:Connect(function()
+					newdd.DropdownBar.Open.Text = list
+					local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,0, 0)})
+					twPos:Play()
+					twPos.Completed:Wait()
+					newdd.Box.Visible = false
+					func(list)
+				end)
+			end)
+		end		
+		
+		newdd.DropdownBar.Trigger.MouseButton1Click:Connect(function()
+			
+			
+			if newdd.Box.Visible == false then
+				newdd.Box.Visible = true
+				local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,1.696, 0)})
+				twPos:Play()
+			elseif newdd.Box.Visible == true then
+				local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,0, 0)})
+				twPos:Play()
+				twPos.Completed:Wait()
+				newdd.Box.Visible = false
+			end
+		end)
+	end
 
-        -- 根据新列表添加选项按钮
-        for _, listItem in ipairs(newListTable) do
-            local newddbtn = reserved.DropdownButton:Clone() -- 
-            newddbtn.Visible = true
-            newddbtn.Parent = scrollingFrame
-
-            newddbtn.Name = listItem
-            newddbtn.name.Text = listItem
-            
-            newddbtn.MouseButton1Click:Connect(function()
-                self.DropdownBar.Open.Text = listItem
-                local twPos = twServ:Create(self.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0, 0, 0)})
-                twPos:Play()
-                twPos.Completed:Wait()
-                self.Box.Visible = false
-                if callback then
-                    callback(listItem) -- 执行回调函数
-                end
-            end)
-        end
-    end
-    
-    -- 初始填充下拉菜单
-    newdd:Update(listTable, func)
-    
-    -- 控制下拉菜单展开和收起的点击事件
-    newdd.DropdownBar.Trigger.MouseButton1Click:Connect(function()
-        if newdd.Box.Visible == false then
-            newdd.Box.Visible = true
-            local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,1.696, 0)})
-            twPos:Play()
-        elseif newdd.Box.Visible == true then
-            local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,0, 0)})
-            twPos:Play()
-            twPos.Completed:Wait()
-            newdd.Box.Visible = false
-        end
-    end)
-
-    return newdd -- 关键：返回创建的下拉菜单对象
+	return self
 end
-
 
 
 
