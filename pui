@@ -1693,7 +1693,7 @@ function UILIB.newTab(name, img)
 		
 	end
 	
-function self.newDropdown(name, desc, listTable, func)
+	function self.newDropdown(name, desc, listTable, func)
     local newdd = reserved.Dropdown:Clone()
     newdd.Visible = true
     newdd.Parent = newTab
