@@ -22,25 +22,25 @@ DRR["2"]["Name"] = [[TopBar]];
 DRR["3"] = Instance.new("UICorner", DRR["2"]);
 DRR["3"]["CornerRadius"] = UDim.new(0.10000000149011612, 0);
 
--- 创建 ScrollingFrame
+-- DrRay.TopBar.ScrollingFrame
 DRR["4"] = Instance.new("ScrollingFrame", DRR["2"]);
 DRR["4"]["Active"] = true;
-DRR["4"]["ScrollingDirection"] = Enum.ScrollingDirection.X; -- ✅ 改为横向滚动
+DRR["4"]["ScrollingDirection"] = Enum.ScrollingDirection.Y;
 DRR["4"]["BorderSizePixel"] = 0;
-DRR["4"]["CanvasSize"] = UDim2.new(2, 0, 0, 0); -- ✅ 增加横向CanvasSize范围
+DRR["4"]["CanvasSize"] = UDim2.new(0.10000000149011612, 0, 0, 0);
 DRR["4"]["BackgroundColor3"] = Color3.fromRGB(26, 26, 36);
-DRR["4"]["AutomaticCanvasSize"] = Enum.AutomaticSize.X; -- ✅ 继续自动扩展
+DRR["4"]["AutomaticCanvasSize"] = Enum.AutomaticSize.X;
 DRR["4"]["BackgroundTransparency"] = 1;
 DRR["4"]["Size"] = UDim2.new(0.915977954864502, 0, 0.5196850299835205, 0);
-DRR["4"]["ScrollBarImageColor3"] = Color3.fromRGB(100, 100, 100); -- ✅ 让滚动条可见
+DRR["4"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
 DRR["4"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-DRR["4"]["ScrollBarThickness"] = 8; -- ✅ 设置滚动条厚度
+DRR["4"]["ScrollBarThickness"] = 0;
 DRR["4"]["Position"] = UDim2.new(0, 0, 0.4803149700164795, 0);
 
--- 设置 UIListLayout 为横向排列
+-- DrRay.TopBar.ScrollingFrame.UIListLayout
 DRR["5"] = Instance.new("UIListLayout", DRR["4"]);
 DRR["5"]["VerticalAlignment"] = Enum.VerticalAlignment.Center;
-DRR["5"]["FillDirection"] = Enum.FillDirection.Horizontal; -- ✅ 保持横向排布
+DRR["5"]["FillDirection"] = Enum.FillDirection.Horizontal;
 DRR["5"]["Padding"] = UDim.new(0.009999999776482582, 0);
 DRR["5"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
 
@@ -1448,7 +1448,7 @@ function UILIB.newTab(name, img)
 		end
 	end)
 
-	function self.newButton(name, desc, func)
+	newButton(name, desc, func)
 		local newbtn = reserved.Button:Clone()
 		newbtn.Parent = newTab
 		newbtn.Title.Text = name
@@ -1469,7 +1469,7 @@ function UILIB.newTab(name, img)
 		newbtn.MouseButton1Click:Connect(func)
 	end
 
-	function self.newLabel(text)
+	newLabel(text)
 		local newLabel = reserved.Label:Clone()
 		newLabel.Parent = newTab
 		newLabel.Visible = true
@@ -1478,7 +1478,7 @@ function UILIB.newTab(name, img)
 		return newLabel.Title
 	end
 
-        function self.editLabel(newLabel, text)
+        editLabel(newLabel, text)
 		newLabel.Parent = newTab
 		newLabel.Visible = true
 		newLabel.Title.Text = text
@@ -1486,7 +1486,7 @@ function UILIB.newTab(name, img)
 		return newLabel.Title
         end
 
-	function self.newInput(name, desc, func)
+	newInput(name, desc, func)
 		local newInput = reserved.Textbox:Clone()
 		local textbox = newInput.TextboxBar.ActualTextbox
 
@@ -1515,7 +1515,7 @@ function UILIB.newTab(name, img)
 
 	end
 
-	function self.newKeybind(name, desc, func)
+	newKeybind(name, desc, func)
 		local newKey = reserved.Keybind:Clone()
 
 
@@ -1584,7 +1584,7 @@ function UILIB.newTab(name, img)
 	end
 
 
-	function self.newSlider(name, desc, max, manageSlider, func)
+	newSlider(name, desc, max, manageSlider, func)
 		local newSlider = reserved.Slider:Clone()
 
 		newSlider.MouseEnter:Connect(function()
@@ -1693,49 +1693,52 @@ function UILIB.newTab(name, img)
 		
 	end
 	
-	function self.newDropdown(name, desc, listTable, func)
-		local newdd = reserved.Dropdown:Clone()
-		newdd.Visible = true
-		newdd.Parent = newTab
-		
-		newdd.Name = name
-		newdd.Title.Text = name
-		newdd.Description.Text = desc
-		
-		for i, list in ipairs(listTable) do
-			local newddbtn = reserved.DropdownButton:Clone()
-			newddbtn.Visible = true
-			newddbtn.Parent = newdd.Box.ScrollingFrame
+function self.newDropdown(name, desc, listTable, func)
+    local newdd = reserved.Dropdown:Clone()
+    newdd.Visible = true
+    newdd.Parent = newTab
 
-			newddbtn.Name = list
-			newddbtn.name.Text = list
-			task.spawn(function()
-				newddbtn.MouseButton1Click:Connect(function()
-					newdd.DropdownBar.Open.Text = list
-					local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,0, 0)})
-					twPos:Play()
-					twPos.Completed:Wait()
-					newdd.Box.Visible = false
-					func(list)
-				end)
-			end)
-		end		
-		
-		newdd.DropdownBar.Trigger.MouseButton1Click:Connect(function()
-			
-			
-			if newdd.Box.Visible == false then
-				newdd.Box.Visible = true
-				local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,1.696, 0)})
-				twPos:Play()
-			elseif newdd.Box.Visible == true then
-				local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0,0, 0)})
-				twPos:Play()
-				twPos.Completed:Wait()
-				newdd.Box.Visible = false
-			end
-		end)
-	end
+    newdd.Name = name
+    newdd.Title.Text = name
+    newdd.Description.Text = desc
+
+    -- 先清空旧的按钮，避免重复
+    newdd.Box.ScrollingFrame:ClearAllChildren()
+
+    for i, list in ipairs(listTable) do
+        local newddbtn = reserved.DropdownButton:Clone()
+        newddbtn.Visible = true
+        newddbtn.Parent = newdd.Box.ScrollingFrame
+
+        newddbtn.Name = list
+        newddbtn.name.Text = list
+        task.spawn(function()
+            newddbtn.MouseButton1Click:Connect(function()
+                newdd.DropdownBar.Open.Text = list
+                local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0, 0, 0)})
+                twPos:Play()
+                twPos.Completed:Wait()
+                newdd.Box.Visible = false
+                func(list)
+            end)
+        end)
+    end
+
+    newdd.DropdownBar.Trigger.MouseButton1Click:Connect(function()
+        if newdd.Box.Visible == false then
+            newdd.Box.Visible = true
+            local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0, 1.696, 0)})
+            twPos:Play()
+        elseif newdd.Box.Visible == true then
+            local twPos = twServ:Create(newdd.Box, TweenInfo.new(0.15), {Size = UDim2.new(0.97, 0, 0, 0)})
+            twPos:Play()
+            twPos.Completed:Wait()
+            newdd.Box.Visible = false
+        end
+    end)
+
+    return newdd  -- 重点：返回控件实例
+end
 
 	return self
 end
