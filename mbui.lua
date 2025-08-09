@@ -656,7 +656,7 @@ do
 		UIPadding_1.PaddingRight = UDim.new(0,5)
 		UIPadding_1.PaddingTop = UDim.new(0,5)
 
-		Search_1.Name = "Search"
+		Search_1.Name = "搜索"
 		Search_1.Parent = DropdownSelect
 		Search_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		Search_1.BackgroundTransparency = 0.949999988079071
@@ -4622,7 +4622,7 @@ function Library:Window(p)
 
 		Close_1.MouseButton1Click:Connect(function()
 			Tabs:Dialog({
-				Title = "Do you want to <font color='#FF0000'>close</font> the ui?",
+				Title = "你确定 <font color='#FF0000'>关闭</font> 此脚本?",
 				Button1 = {
 					Title = 'Confirm',
 					Color = Color3.fromRGB(0, 188, 0),
