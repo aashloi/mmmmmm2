@@ -2,7 +2,7 @@ Library = {}
 SaveTheme = {}
 
 local themes = {
-	index = {'Dark', 'Amethyst'，'Purple'},
+	index = {'Dark', 'Amethyst'},
 	Amethyst = {
 		['Shadow'] = Color3.fromRGB(24, 24, 31),
 		['Background'] = Color3.fromRGB(29, 28, 38),
@@ -155,83 +155,6 @@ local themes = {
 			}
 		}
 	},
-}
-
-Purple = {
-    ['Shadow'] = Color3.fromRGB(128, 0, 128),  -- 紫色阴影
-    ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色背景
-    ['Page'] = Color3.fromRGB(108, 0, 108),  -- 页面的紫色
-    ['Main'] = Color3.fromRGB(186, 85, 211),  -- 浅紫色主色
-    ['Text & Icon'] = Color3.fromRGB(255, 255, 255),  -- 白色文字和图标
-    ['Function'] = {
-        ['Toggle'] = {
-            ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色背景
-            ['True'] = {
-                ['Toggle Background'] = Color3.fromRGB(186, 85, 211),  -- 浅紫色
-                ['Toggle Value'] = Color3.fromRGB(255, 255, 255),  -- 白色
-            },
-            ['False'] = {
-                ['Toggle Background'] = Color3.fromRGB(100, 0, 100),  -- 深紫色
-                ['Toggle Value'] = Color3.fromRGB(255, 255, 255),  -- 白色
-            }
-        },
-        ['Label'] = {
-            ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色
-        },
-        ['Dropdown'] = {
-            ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色
-            ['Value Background'] = Color3.fromRGB(108, 0, 108),  -- 深紫色
-            ['Value Stroke'] = Color3.fromRGB(255, 255, 255),  -- 白色
-            ['Dropdown Select'] = {
-                ['Background'] = Color3.fromRGB(108, 0, 108),  -- 深紫色
-                ['Search'] = Color3.fromRGB(150, 0, 150),  -- 更深紫色
-                ['Item Background'] = Color3.fromRGB(120, 0, 120),  -- 紫色项
-            }
-        },
-        ['Slider'] = {
-            ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色背景
-            ['Value Background'] = Color3.fromRGB(108, 0, 108),  -- 深紫色
-            ['Value Stroke'] = Color3.fromRGB(255, 255, 255),  -- 白色
-            ['Slider Bar'] = Color3.fromRGB(186, 85, 211),  -- 浅紫色滑块条
-            ['Slider Bar Value'] = Color3.fromRGB(255, 255, 255),  -- 白色滑块值
-            ['Circle Value'] = Color3.fromRGB(255, 255, 255)  -- 白色圆圈
-        },
-        ['Code'] = {
-            ['Background'] = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(128, 0, 128)), ColorSequenceKeypoint.new(1, Color3.fromRGB(128, 0, 128))},  -- 紫色背景
-            ['Background Code'] = Color3.fromRGB(108, 0, 108),  -- 深紫色
-            ['Background Code Value'] = Color3.fromRGB(86, 0, 86),  -- 更深紫色
-            ['ScrollingFrame Code'] = Color3.fromRGB(186, 85, 211),  -- 浅紫色代码框
-        },
-        ['Button'] = {
-            ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色背景
-            ['Click'] = Color3.fromRGB(255, 255, 255),  -- 白色点击效果
-        },
-        ['Textbox'] = {
-            ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色背景
-            ['Value Background'] = Color3.fromRGB(108, 0, 108),  -- 深紫色
-            ['Value Stroke'] = Color3.fromRGB(255, 255, 255),  -- 白色
-        },
-        ['Keybind'] = {
-            ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色背景
-            ['Value Background'] = Color3.fromRGB(108, 0, 108),  -- 深紫色
-            ['Value Stroke'] = Color3.fromRGB(255, 255, 255),  -- 白色
-            ['True'] = {
-                ['Toggle Background'] = Color3.fromRGB(186, 85, 211),  -- 浅紫色
-                ['Toggle Value'] = Color3.fromRGB(255, 255, 255),  -- 白色
-            },
-            ['False'] = {
-                ['Toggle Background'] = Color3.fromRGB(100, 0, 100),  -- 深紫色
-                ['Toggle Value'] = Color3.fromRGB(255, 255, 255),  -- 白色
-            }
-        },
-        ['Color Picker'] = {
-            ['Background'] = Color3.fromRGB(128, 0, 128),  -- 紫色背景
-            ['Color Select'] = {
-                ['Background'] = Color3.fromRGB(108, 0, 108),  -- 深紫色选择框
-                ['UIStroke'] = Color3.fromRGB(255, 255, 255),  -- 白色框
-            }
-        }
-    }
 }
 
 local ScreenGui = Instance.new("ScreenGui")
