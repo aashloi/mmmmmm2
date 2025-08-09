@@ -656,7 +656,7 @@ do
 		UIPadding_1.PaddingRight = UDim.new(0,5)
 		UIPadding_1.PaddingTop = UDim.new(0,5)
 
-		Search_1.Name = "搜索"
+		Search_1.Name = "Search"
 		Search_1.Parent = DropdownSelect
 		Search_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
 		Search_1.BackgroundTransparency = 0.949999988079071
@@ -679,7 +679,7 @@ do
 		TextBox_1.Size = UDim2.new(1, 0,1, 0)
 		TextBox_1.Font = Enum.Font.Gotham
 		TextBox_1.PlaceholderColor3 = Color3.fromRGB(178,178,178)
-		TextBox_1.PlaceholderText = "Search . . ."
+		TextBox_1.PlaceholderText = "搜索 . . ."
 		TextBox_1.Text = ""
 		TextBox_1.TextColor3 = Color3.fromRGB(255,255,255)
 		TextBox_1.TextSize = 11
@@ -4622,16 +4622,16 @@ function Library:Window(p)
 
 		Close_1.MouseButton1Click:Connect(function()
 			Tabs:Dialog({
-				Title = "你确定 <font color='#FF0000'>关闭</font> 此脚本?",
+				Title = "你确定？ <font color='#FF0000'>关闭</font> 此脚本吗?",
 				Button1 = {
-					Title = 'Confirm',
+					Title = '确定',
 					Color = Color3.fromRGB(0, 188, 0),
 					Callback = function()
 						ScreenGui:Destroy()
 					end,
 				},
 				Button2 = {
-					Title = 'Cancel',
+					Title = '取消',
 					Color = Color3.fromRGB(226, 39, 6),
 				}
 			})
