@@ -155,7 +155,11 @@ local themes = {
 			}
 		}
 	},
-	Ocean = {
+}
+
+local ScreenGui
+
+themes.Ocean = {
 		['Shadow'] = Color3.fromRGB(12, 24, 36),
 		['Background'] = Color3.fromRGB(18, 36, 54),
 		['Page'] = Color3.fromRGB(15, 30, 45),
@@ -232,7 +236,7 @@ local themes = {
 		}
 	}
 
-	Sunset = {
+themes.Sunset = {
 		['Shadow'] = Color3.fromRGB(36, 18, 18),
 		['Background'] = Color3.fromRGB(54, 27, 27),
 		['Page'] = Color3.fromRGB(45, 20, 20),
@@ -309,7 +313,7 @@ local themes = {
 		}
 	}
 
-	Forest = {
+themes.Forest = {
 		['Shadow'] = Color3.fromRGB(18, 36, 18),
 		['Background'] = Color3.fromRGB(27, 54, 27),
 		['Page'] = Color3.fromRGB(20, 45, 20),
@@ -386,7 +390,7 @@ local themes = {
 		}
 	}
 
-	Rose = {
+themes.Rose = {
 		['Shadow'] = Color3.fromRGB(36, 12, 24),
 		['Background'] = Color3.fromRGB(54, 18, 36),
 		['Page'] = Color3.fromRGB(45, 15, 30),
@@ -463,7 +467,7 @@ local themes = {
 		}
 	}
 
-	Ice = {
+themes.Ice = {
 		['Shadow'] = Color3.fromRGB(18, 30, 36),
 		['Background'] = Color3.fromRGB(27, 45, 54),
 		['Page'] = Color3.fromRGB(20, 40, 50),
@@ -540,7 +544,7 @@ local themes = {
 		}
 	}
 
-	Gold = {
+themes.Gold = {
 		['Shadow'] = Color3.fromRGB(36, 30, 12),
 		['Background'] = Color3.fromRGB(54, 45, 18),
 		['Page'] = Color3.fromRGB(45, 38, 15),
@@ -617,7 +621,7 @@ local themes = {
 		}
 	}
 
-	Mint = {
+themes.Mint = {
 		['Shadow'] = Color3.fromRGB(18, 36, 30),
 		['Background'] = Color3.fromRGB(27, 54, 45),
 		['Page'] = Color3.fromRGB(20, 45, 38),
@@ -694,7 +698,7 @@ local themes = {
 		}
 	}
 
-	Lavender = {
+themes.Lavender = {
 		['Shadow'] = Color3.fromRGB(28, 24, 36),
 		['Background'] = Color3.fromRGB(40, 34, 54),
 		['Page'] = Color3.fromRGB(36, 30, 48),
@@ -771,7 +775,7 @@ local themes = {
 		}
 	}
 
-	Fire = {
+themes.Fire = {
 		['Shadow'] = Color3.fromRGB(36, 20, 12),
 		['Background'] = Color3.fromRGB(54, 30, 18),
 		['Page'] = Color3.fromRGB(45, 25, 15),
@@ -848,7 +852,7 @@ local themes = {
 		}
 	}
 
-	NightSky = {
+themes.NightSky = {
 		['Shadow'] = Color3.fromRGB(12, 12, 24),
 		['Background'] = Color3.fromRGB(18, 18, 36),
 		['Page'] = Color3.fromRGB(15, 15, 30),
@@ -924,10 +928,7 @@ local themes = {
 			}
 		}
 	}
-
-}
-
-local ScreenGui = Instance.new("ScreenGui")
+ = Instance.new("ScreenGui")
 ScreenGui.Name = "Dummy Kawaii"
 ScreenGui.Parent = not game:GetService("RunService"):IsStudio() and game:GetService("CoreGui") or game:GetService("Players").LocalPlayer.PlayerGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -949,26 +950,40 @@ do
 		return result
 	end
 	function Library:setTheme(st)
-		for name, objs in pairs(SaveTheme) do
-			local color = getColorFromPath(st, name)
-			if color then
+	for name, objs in pairs(SaveTheme) do
+		local color = getColorFromPath(st, name)
+		if color and objs then
+			for _, obj in pairs(objs) do
+				if obj:IsA("Frame") or obj:IsA("CanvasGroup") then
+					obj.BackgroundColor3 = color
+				elseif obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+					obj.TextColor3 = color
+				elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
+					obj.ImageColor3 = color
+				elseif obj:IsA("ScrollingFrame") then
+					obj.ScrollBarImageColor3 = color
+				elseif obj:IsA("UIStroke") then
+					obj.Color = color
+				elseif obj:IsA("UIGradient") then
+					obj.Color = color
+				end
+			end
+		end
+	end
+	-- Transparent backgrounds for 'Background' and 'Page'
+	if SaveTheme then
+		for _, key in ipairs({'Background','Page'}) do
+			local objs = SaveTheme[key]
+			if objs then
 				for _, obj in pairs(objs) do
-					if SaveTheme[name] then
-						for _, obj in pairs(SaveTheme[name]) do
-							if obj:IsA("Frame") or obj:IsA("CanvasGroup") then
-								obj.BackgroundColor3 = color
-							elseif obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-								obj.TextColor3 = color
-							elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
-								obj.ImageColor3 = color
-							elseif obj:IsA("ScrollingFrame") then
-								obj.ScrollBarImageColor3 = color
-							elseif obj:IsA("UIStroke") then
-								obj.Color = color
-							elseif obj:IsA("UIGradient") then
-								obj.Color = color
-							
-        		end
+					if obj and (obj:IsA('Frame') or obj:IsA('CanvasGroup')) then
+						pcall(function() obj.BackgroundTransparency = 1 end)
+					end
+				end
+			end
+		end
+	end
+end
         	end
     end
     -- Transparent backgrounds for 'Background' and 'Page'
