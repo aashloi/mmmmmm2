@@ -1,119 +1,160 @@
+Library = {}
+SaveTheme = {}
+
 local themes = {
-    index = {'Dark', 'Amethyst', 'Orange', 'Purple', 'Yellow', 'White', 'Pink'},  -- 更新索引，包含新主题
-    Amethyst = {
-        ['Shadow'] = Color3.fromRGB(24, 24, 31),
-        ['Background'] = Color3.fromRGB(29, 28, 38),
-        ['Main'] = Color3.fromRGB(91, 68, 209),
-        ['Text & Icon'] = Color3.fromRGB(255, 255, 255),
-        -- 其他部分保持不变...
-    },
-    Dark = {
-        ['Shadow'] = Color3.fromRGB(15, 15, 15),
-        ['Background'] = Color3.fromRGB(20, 20, 20),
-        ['Main'] = Color3.fromRGB(50, 50, 50),
-        ['Text & Icon'] = Color3.fromRGB(230, 230, 230),
-        -- 其他部分保持不变...
-    },
-    Orange = {  -- 橙色主题
-        ['Shadow'] = Color3.fromRGB(255, 165, 0),
-        ['Background'] = Color3.fromRGB(255, 165, 0),
-        ['Main'] = Color3.fromRGB(255, 140, 0),
-        ['Text & Icon'] = Color3.fromRGB(255, 255, 255),
-        ['Function'] = {
-            ['Toggle'] = {
-                ['Background'] = Color3.fromRGB(255, 165, 0),
-                ['True'] = {
-                    ['Toggle Background'] = Color3.fromRGB(255, 140, 0),
-                    ['Toggle Value'] = Color3.fromRGB(255, 255, 255),
-                },
-                ['False'] = {
-                    ['Toggle Background'] = Color3.fromRGB(230, 130, 30),
-                    ['Toggle Value'] = Color3.fromRGB(255, 255, 255),
-                }
-            },
-            -- 其他控件的颜色配置
-        }
-    },
-    Purple = {  -- 紫色主题
-        ['Shadow'] = Color3.fromRGB(128, 0, 128),
-        ['Background'] = Color3.fromRGB(128, 0, 128),
-        ['Main'] = Color3.fromRGB(186, 85, 211),
-        ['Text & Icon'] = Color3.fromRGB(255, 255, 255),
-        ['Function'] = {
-            ['Toggle'] = {
-                ['Background'] = Color3.fromRGB(128, 0, 128),
-                ['True'] = {
-                    ['Toggle Background'] = Color3.fromRGB(186, 85, 211),
-                    ['Toggle Value'] = Color3.fromRGB(255, 255, 255),
-                },
-                ['False'] = {
-                    ['Toggle Background'] = Color3.fromRGB(150, 50, 150),
-                    ['Toggle Value'] = Color3.fromRGB(255, 255, 255),
-                }
-            },
-            -- 其他控件的颜色配置
-        }
-    },
-    Yellow = {  -- 黄色主题
-        ['Shadow'] = Color3.fromRGB(255, 255, 0),
-        ['Background'] = Color3.fromRGB(255, 255, 0),
-        ['Main'] = Color3.fromRGB(255, 215, 0),
-        ['Text & Icon'] = Color3.fromRGB(0, 0, 0),
-        ['Function'] = {
-            ['Toggle'] = {
-                ['Background'] = Color3.fromRGB(255, 255, 0),
-                ['True'] = {
-                    ['Toggle Background'] = Color3.fromRGB(255, 215, 0),
-                    ['Toggle Value'] = Color3.fromRGB(0, 0, 0),
-                },
-                ['False'] = {
-                    ['Toggle Background'] = Color3.fromRGB(220, 220, 0),
-                    ['Toggle Value'] = Color3.fromRGB(0, 0, 0),
-                }
-            },
-            -- 其他控件的颜色配置
-        }
-    },
-    White = {  -- 白色主题
-        ['Shadow'] = Color3.fromRGB(255, 255, 255),
-        ['Background'] = Color3.fromRGB(255, 255, 255),
-        ['Main'] = Color3.fromRGB(230, 230, 230),
-        ['Text & Icon'] = Color3.fromRGB(0, 0, 0),
-        ['Function'] = {
-            ['Toggle'] = {
-                ['Background'] = Color3.fromRGB(255, 255, 255),
-                ['True'] = {
-                    ['Toggle Background'] = Color3.fromRGB(230, 230, 230),
-                    ['Toggle Value'] = Color3.fromRGB(0, 0, 0),
-                },
-                ['False'] = {
-                    ['Toggle Background'] = Color3.fromRGB(210, 210, 210),
-                    ['Toggle Value'] = Color3.fromRGB(0, 0, 0),
-                }
-            },
-            -- 其他控件的颜色配置
-        }
-    },
-    Pink = {  -- 粉色主题
-        ['Shadow'] = Color3.fromRGB(255, 182, 193),
-        ['Background'] = Color3.fromRGB(255, 182, 193),
-        ['Main'] = Color3.fromRGB(255, 105, 180),
-        ['Text & Icon'] = Color3.fromRGB(255, 255, 255),
-        ['Function'] = {
-            ['Toggle'] = {
-                ['Background'] = Color3.fromRGB(255, 182, 193),
-                ['True'] = {
-                    ['Toggle Background'] = Color3.fromRGB(255, 105, 180),
-                    ['Toggle Value'] = Color3.fromRGB(255, 255, 255),
-                },
-                ['False'] = {
-                    ['Toggle Background'] = Color3.fromRGB(230, 160, 190),
-                    ['Toggle Value'] = Color3.fromRGB(255, 255, 255),
-                }
-            },
-            -- 其他控件的颜色配置
-        }
-    },
+	index = {'Dark', 'Amethyst'},
+	Amethyst = {
+		['Shadow'] = Color3.fromRGB(24, 24, 31),
+		['Background'] = Color3.fromRGB(29, 28, 38),
+		['Page'] = Color3.fromRGB(24, 24, 31),
+		['Main'] = Color3.fromRGB(91, 68, 209),
+		['Text & Icon'] = Color3.fromRGB(255, 255, 255),
+		['Function'] = {
+			['Toggle'] = {
+				['Background'] = Color3.fromRGB(29, 28, 38),
+				['True'] = {
+					['Toggle Background'] = Color3.fromRGB(44, 34, 103),
+					['Toggle Value'] = Color3.fromRGB(91, 68, 209),
+				},
+				['False'] = {
+					['Toggle Background'] = Color3.fromRGB(36, 35, 48),
+					['Toggle Value'] = Color3.fromRGB(44, 42, 62),
+				}
+			},
+			['Label'] = {
+				['Background'] = Color3.fromRGB(29, 28, 38),
+			},
+			['Dropdown'] = {
+				['Background'] = Color3.fromRGB(29, 28, 38),
+				['Value Background'] = Color3.fromRGB(24, 24, 31),
+				['Value Stroke'] = Color3.fromRGB(255, 255, 255),
+				['Dropdown Select'] = {
+					['Background'] = Color3.fromRGB(24, 24, 31),
+					['Search'] = Color3.fromRGB(35, 35, 42),
+					['Item Background'] = Color3.fromRGB(45, 45, 52),
+				}
+			},
+			['Slider'] = {
+				['Background'] = Color3.fromRGB(29, 28, 38),
+				['Value Background'] = Color3.fromRGB(24, 24, 31),
+				['Value Stroke'] = Color3.fromRGB(255, 255, 255),
+				['Slider Bar'] = Color3.fromRGB(44, 34, 103),
+				['Slider Bar Value'] = Color3.fromRGB(91, 68, 209),
+				['Circle Value'] = Color3.fromRGB(255, 255, 255)
+			},
+			['Code'] = {
+				['Background'] = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(29, 28, 38)), ColorSequenceKeypoint.new(1, Color3.fromRGB(29, 28, 38))},
+				['Background Code'] = Color3.fromRGB(51, 62, 68),
+				['Background Code Value'] = Color3.fromRGB(38, 50, 56),
+				['ScrollingFrame Code'] = Color3.fromRGB(216, 150, 179)
+			},
+			['Button'] = {
+				['Background'] = Color3.fromRGB(29, 28, 38),
+				['Click'] = Color3.fromRGB(255, 255, 255)
+			},
+			['Textbox'] = {
+				['Background'] = Color3.fromRGB(29, 28, 38),
+				['Value Background'] = Color3.fromRGB(24, 24, 31),
+				['Value Stroke'] = Color3.fromRGB(255, 255, 255),
+			},
+			['Keybind'] = {
+				['Background'] = Color3.fromRGB(29, 28, 38),
+				['Value Background'] = Color3.fromRGB(24, 24, 31),
+				['Value Stroke'] = Color3.fromRGB(255, 255, 255),
+				['True'] = {
+					['Toggle Background'] = Color3.fromRGB(44, 34, 103),
+					['Toggle Value'] = Color3.fromRGB(91, 68, 209),
+				},
+				['False'] = {
+					['Toggle Background'] = Color3.fromRGB(36, 35, 48),
+					['Toggle Value'] = Color3.fromRGB(44, 42, 62),
+				}
+			},
+			['Color Picker'] = {
+				['Background'] = Color3.fromRGB(29, 28, 38),
+				['Color Select'] = {
+					['Background'] = Color3.fromRGB(24, 24, 31),
+					['UIStroke'] = Color3.fromRGB(255, 255, 255),
+				}
+			}
+		}
+	},
+	Dark = {
+		['Shadow'] = Color3.fromRGB(15, 15, 15),
+		['Background'] = Color3.fromRGB(20, 20, 20),
+		['Page'] = Color3.fromRGB(18, 18, 18),
+		['Main'] = Color3.fromRGB(50, 50, 50),
+		['Text & Icon'] = Color3.fromRGB(230, 230, 230),
+		['Function'] = {
+			['Toggle'] = {
+				['Background'] = Color3.fromRGB(25, 25, 25),
+				['True'] = {
+					['Toggle Background'] = Color3.fromRGB(40, 40, 40),
+					['Toggle Value'] = Color3.fromRGB(70, 130, 180),
+				},
+				['False'] = {
+					['Toggle Background'] = Color3.fromRGB(30, 30, 30),
+					['Toggle Value'] = Color3.fromRGB(40, 40, 40),
+				}
+			},
+			['Label'] = {
+				['Background'] = Color3.fromRGB(25, 25, 25),
+			},
+			['Dropdown'] = {
+				['Background'] = Color3.fromRGB(25, 25, 25),
+				['Value Background'] = Color3.fromRGB(20, 20, 20),
+				['Value Stroke'] = Color3.fromRGB(230, 230, 230),
+				['Dropdown Select'] = {
+					['Background'] = Color3.fromRGB(20, 20, 20),
+					['Search'] = Color3.fromRGB(30, 30, 30),
+					['Item Background'] = Color3.fromRGB(30, 30, 30),
+				}
+			},
+			['Slider'] = {
+				['Background'] = Color3.fromRGB(25, 25, 25),
+				['Value Background'] = Color3.fromRGB(20, 20, 20),
+				['Value Stroke'] = Color3.fromRGB(230, 230, 230),
+				['Slider Bar'] = Color3.fromRGB(40, 40, 40),
+				['Slider Bar Value'] = Color3.fromRGB(70, 130, 180),
+				['Circle Value'] = Color3.fromRGB(255, 255, 255)
+			},
+			['Code'] = {
+				['Background'] = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 25)), ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 25))},
+				['Background Code'] = Color3.fromRGB(35, 35, 35),
+				['Background Code Value'] = Color3.fromRGB(28, 28, 28),
+				['ScrollingFrame Code'] = Color3.fromRGB(150, 150, 150)
+			},
+			['Button'] = {
+				['Background'] = Color3.fromRGB(25, 25, 25),
+				['Click'] = Color3.fromRGB(230, 230, 230)
+			},
+			['Textbox'] = {
+				['Background'] = Color3.fromRGB(25, 25, 25),
+				['Value Background'] = Color3.fromRGB(20, 20, 20),
+				['Value Stroke'] = Color3.fromRGB(230, 230, 230),
+			},
+			['Keybind'] = {
+				['Background'] = Color3.fromRGB(25, 25, 25),
+				['Value Background'] = Color3.fromRGB(20, 20, 20),
+				['Value Stroke'] = Color3.fromRGB(230, 230, 230),
+				['True'] = {
+					['Toggle Background'] = Color3.fromRGB(40, 40, 40),
+					['Toggle Value'] = Color3.fromRGB(70, 130, 180),
+				},
+				['False'] = {
+					['Toggle Background'] = Color3.fromRGB(30, 30, 30),
+					['Toggle Value'] = Color3.fromRGB(40, 40, 40),
+				}
+			},
+			['Color Picker'] = {
+				['Background'] = Color3.fromRGB(25, 25, 25),
+				['Color Select'] = {
+					['Background'] = Color3.fromRGB(20, 20, 20),
+					['UIStroke'] = Color3.fromRGB(230, 230, 230),
+				}
+			}
+		}
+	},
 }
 
 local ScreenGui = Instance.new("ScreenGui")
