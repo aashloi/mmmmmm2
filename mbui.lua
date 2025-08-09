@@ -4622,7 +4622,7 @@ function Library:Window(p)
 
 		Close_1.MouseButton1Click:Connect(function()
 			Tabs:Dialog({
-				Title = "你确定？ <font color='#FF0000'>关闭</font> 此脚本吗?",
+				Title = "你确定<font color='#FF0000'>关闭</font>此脚本吗?",
 				Button1 = {
 					Title = '确定',
 					Color = Color3.fromRGB(0, 188, 0),
