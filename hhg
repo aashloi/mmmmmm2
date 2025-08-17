@@ -1,695 +1,1095 @@
---!strict
--- AstraUI - A tiny, stylish Roblox UI library
--- Author: ChatGPT (GPT-5 Thinking)
--- License: MIT
--- Features: Floating launcher, window with snow effect, theme & glow, dropdown, slider, button, toggle, input
--- Mobile + PC friendly. No external assets required.
-
--- ========== Public API ==========
--- local AstraUI = require(path.to.AstraUI)
--- local win = AstraUI.createWindow({
---     title = "AstraUI Demo",
---     themeColor = Color3.fromRGB(255, 86, 146),
---     glow = true,
---     snow = true,
---     hotkey = Enum.KeyCode.RightShift, -- desktop toggle
---     floating = true,                   -- show floating launcher
--- })
--- local sec = win:AddSection("Controls")
--- sec:AddButton("Run", function() print("Clicked!") end)
--- sec:AddToggle("God Mode", false, function(on) print("Toggle:", on) end)
--- sec:AddSlider("WalkSpeed", 16, 100, 32, 1, function(v) print("Speed:", v) end)
--- sec:AddDropdown("Fruits", {"Apple","Banana","Cherry"}, "Apple", false, function(choice) print("Fruit:", choice) end)
--- sec:AddInput("Player Name", "Type here...", false, function(text) print("Hello,", text) end)
--- win:SetThemeColor(Color3.fromRGB(46, 170, 255))
--- win:SetGlow(true, Color3.fromRGB(46, 170, 255))
--- win:Open()
-
-local Players = game:GetService("Players")
+local Kings = {};
+local UIAnimationSpeed : number = 0.1;
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
-local localPlayer = Players.LocalPlayer
-local playerGui = localPlayer:WaitForChild("PlayerGui")
+-- init
+local ScreenGui = script.Parent.Parent;
+ScreenGui["Parent"] = game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
+ScreenGui["Name"] = "cofsSKID";
+ScreenGui["ResetOnSpawn"] = false;
+ScreenGui["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
-type Section = {
-    AddButton: (self: any, text: string, callback: () -> ()) -> any,
-    AddToggle: (self: any, text: string, default: boolean, callback: (boolean) -> ()) -> any,
-    AddSlider: (self: any, text: string, min: number, max: number, default: number, step: number?, callback: (number)->()) -> any,
-    AddDropdown: (self: any, text: string, options: {string}, default: string | {string}?, multi: boolean?, callback: (any) -> ()) -> any,
-    AddInput: (self: any, text: string, placeholder: string?, numeric: boolean?, callback: (string) -> ()) -> any,
-}
+function Kings.newWindow(windowName, windowSettings)
+	if windowName == nil then
+		windowName = "Window";
+	end
 
-export type Window = {
-    AddSection: (self: any, title: string) -> Section,
-    SetThemeColor: (self: any, color: Color3) -> (),
-    SetGlow: (self: any, enabled: boolean, color: Color3?) -> (),
-    Open: (self: any) -> (), Close: (self: any) -> (), Toggle: (self: any) -> (),
-    Destroy: (self: any) -> (),
-}
+	-- the new window frame
+	local newWindow = Instance.new("Frame", ScreenGui);
+	newWindow["BorderSizePixel"] = 0;
+	newWindow["BackgroundColor3"] = Color3.fromRGB(50, 50, 50);
+	newWindow["Size"] = UDim2.new(0, 300, 0, 400);
+	newWindow["Position"] = UDim2.new(0.07388179004192352, 0, 0.15295256674289703, 0);
+	newWindow["Name"] = windowName;
 
-local AstraUI = {}
-AstraUI.__index = AstraUI
+	local function setWindowLight(integer)
+		newWindow["BackgroundColor3"] = Color3.fromRGB(integer, integer, integer);
+	end
 
-local function makeRound(instance: Instance, radius: number?)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, radius or 12)
-    c.Parent = instance :: any
+	if windowSettings["windowSize"] then
+		newWindow["Size"] = windowSettings["windowSize"];
+	end
+
+	if windowSettings["windowPosition"] then
+		newWindow["Position"] = windowSettings["windowPosition"];
+	end
+
+	if windowSettings["draggable"] == true then
+		local UserInputService = game:GetService("UserInputService")
+		local runService = (game:GetService("RunService"));
+
+		local gui = ScreenGui[windowName];
+
+		local dragging
+		local dragInput
+		local dragStart
+		local startPos
+
+		local function Lerp(a, b, m)
+			return a + (b - a) * m
+		end;
+
+		local lastMousePos
+		local lastGoalPos
+		local DRAG_SPEED = (8); -- // The speed of the UI darg.
+		local function Update(dt)
+			if not (startPos) then return end;
+			if not (dragging) and (lastGoalPos) then
+				gui.Position = UDim2.new(startPos.X.Scale, Lerp(gui.Position.X.Offset, lastGoalPos.X.Offset, dt * DRAG_SPEED), startPos.Y.Scale, Lerp(gui.Position.Y.Offset, lastGoalPos.Y.Offset, dt * DRAG_SPEED))
+				return 
+			end;
+
+			local delta = (lastMousePos - UserInputService:GetMouseLocation())
+			local xGoal = (startPos.X.Offset - delta.X);
+			local yGoal = (startPos.Y.Offset - delta.Y);
+			lastGoalPos = UDim2.new(startPos.X.Scale, xGoal, startPos.Y.Scale, yGoal)
+			gui.Position = UDim2.new(startPos.X.Scale, Lerp(gui.Position.X.Offset, xGoal, dt * DRAG_SPEED), startPos.Y.Scale, Lerp(gui.Position.Y.Offset, yGoal, dt * DRAG_SPEED))
+		end;
+
+		gui.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging = true
+				dragStart = input.Position
+				startPos = gui.Position
+				lastMousePos = UserInputService:GetMouseLocation()
+
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						dragging = false
+					end
+				end)
+			end
+		end)
+
+		gui.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input
+			end
+		end)
+
+		runService.Heartbeat:Connect(Update)
+	end 
+
+	local function toggleVisibility() 
+		-- optimized lmao
+		newWindow["Visible"] = not newWindow["Visible"]
+	end
+
+	if windowSettings["hide"] == true then
+		newWindow["Visible"] = false;
+	end
+
+	local newTitle = Instance.new("TextLabel", newWindow);
+	newTitle["BorderSizePixel"] = 0;
+	newTitle["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newTitle["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+	newTitle["TextSize"] = 17;
+	newTitle["TextColor3"] = Color3.fromRGB(221, 221, 221);
+	newTitle["Size"] = UDim2.new(0, 238, 0, 25);
+	newTitle["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newTitle["Text"] = windowName;
+	newTitle["Name"] = "windowTitle";
+	newTitle["BackgroundTransparency"] = 1;
+	newTitle["Position"] = UDim2.new(0.10333333164453506, 0, 0.014999999664723873, 0);
+
+	local function setWindowName(name)
+		newTitle["Text"] = name;
+	end
+
+	-- window title
+	if windowSettings["hideWindowTitle"] == true then
+		newTitle["Visible"] = false;
+	end
+
+	-- window top right corner button
+	if windowSettings["noCloseButton"] ~= true then
+
+		local newWindowButton = Instance.new("ImageButton", newWindow);
+		newWindowButton["Image"] = [[rbxassetid://3926305904]];
+		newWindowButton["ImageRectSize"] = Vector2.new(24, 24);
+		newWindowButton["Size"] = UDim2.new(0, 25, 0, 25);
+		newWindowButton["Name"] = "windowButton";
+		newWindowButton["ImageRectOffset"] = Vector2.new(284, 4);
+		newWindowButton["Position"] = UDim2.new(0.8966666460037231, 0, 0.014999999664723873, 0);
+		newWindowButton["BackgroundTransparency"] = 1;
+
+		newWindowButton.MouseButton1Click:connect(function()
+			newWindow:TweenSize(UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, UIAnimationSpeed, true);
+			for i, v in pairs(newWindow:GetDescendants()) do
+				pcall(function()
+					v:TweenSize(UDim2.new(0,0,0,0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, UIAnimationSpeed, true);
+				end)
+			end
+			task.wait(0.04);
+			newWindow:Destroy();
+		end)
+	end
+
+	local newWindowUICorner = Instance.new("UICorner", newWindow);
+	newWindowUICorner["CornerRadius"] = UDim.new(0, 7);
+
+	local newWindowUIGradient = Instance.new("UIGradient", newWindow);
+	newWindowUIGradient["Rotation"] = 90;
+	newWindowUIGradient["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(50, 50, 50)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(50, 50, 50))};
+	if (windowSettings["windowColor"]) then
+		newWindowUIGradient["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(windowSettings["windowColor"][1], windowSettings["windowColor"][2], windowSettings["windowColor"][3])),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(0, 0, 0))};
+	end
+
+	-- window content
+	local newWindowContent = Instance.new("ScrollingFrame", newWindow);
+	newWindowContent["Active"] = true;
+	newWindowContent["BorderSizePixel"] = 0;
+	newWindowContent["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowContent["BackgroundTransparency"] = 1;
+	newWindowContent["Size"] = UDim2.new(0, 300, 0, 369);
+	newWindowContent["ScrollBarImageColor3"] = Color3.fromRGB(71, 71, 71);
+	newWindowContent["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowContent["ScrollBarThickness"] = 6;
+	newWindowContent["Position"] = UDim2.new(0, 0, 0.07750000059604645, 0);
+	newWindowContent["Name"] = "main";
+
+	local function automaticHeight()
+		local canvSize = 0;
+
+		for i, v in pairs(newWindowContent:GetChildren()) do
+			if v:IsA("Frame") then
+				canvSize = canvSize + v.Size.Y.Offset + 7;
+			end
+		end
+
+		newWindowContent.CanvasSize = UDim2.new(0, 0, 0, canvSize)
+		task.wait(5)
+		automaticHeight()
+	end
+	-- dear god dont use spawn pls use task.spawn
+	task.spawn(automaticHeight);
+
+	if windowSettings["windowSize"] then
+		newWindowContent["Size"] = windowSettings["windowSize"];
+		newWindowContent["Size"] = newWindowContent["Size"] + UDim2.new(0, 0, 0, -31)
+	end
+
+	local function clear()
+		for i, v in pairs(newWindowContent:GetChildren()) do
+			if v:IsA("Frame") then 
+				v:Destroy();
+			end
+		end
+	end
+
+	local newWindowContentUIPadding = Instance.new("UIPadding", newWindowContent);
+	newWindowContentUIPadding["PaddingTop"] = UDim.new(0, 8);
+
+	local newWindowContentUIListLayout = Instance.new("UIListLayout", newWindowContent);
+	newWindowContentUIListLayout["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
+	newWindowContentUIListLayout["Padding"] = UDim.new(0, 7);
+	newWindowContentUIListLayout["SortOrder"] = Enum.SortOrder.LayoutOrder;
+
+	if windowSettings["showShadows"] == true then
+
+		local newWindowShadowHolder = Instance.new("Frame", newWindow);
+		newWindowShadowHolder["ZIndex"] = 0;
+		newWindowShadowHolder["BackgroundTransparency"] = 1;
+		newWindowShadowHolder["Size"] = UDim2.new(1.056666612625122, 0, 1.037500023841858, 0);
+		newWindowShadowHolder["Position"] = UDim2.new(-0.02666666731238365, 0, -0.015999999552965164, 0);
+		newWindowShadowHolder["Name"] = "shadowHolder";
+
+		local newWindowUmbraShadow = Instance.new("ImageLabel", newWindowShadowHolder);
+		newWindowUmbraShadow["ZIndex"] = 0;
+		newWindowUmbraShadow["SliceCenter"] = Rect.new(10, 10, 118, 118);
+		newWindowUmbraShadow["ScaleType"] = Enum.ScaleType.Slice;
+		newWindowUmbraShadow["ImageColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowUmbraShadow["ImageTransparency"] = 0.8600000143051147;
+		newWindowUmbraShadow["AnchorPoint"] = Vector2.new(0.5, 0.5);
+		newWindowUmbraShadow["Image"] = [[rbxassetid://1316045217]];
+		newWindowUmbraShadow["Size"] = UDim2.new(1, 2, 1, 2);
+		newWindowUmbraShadow["Name"] = [[umbraShadow]];
+		newWindowUmbraShadow["BackgroundTransparency"] = 1;
+		newWindowUmbraShadow["Position"] = UDim2.new(0.5, 0, 0.5, 0);
+
+		local newWindowPenumbraShadow = Instance.new("ImageLabel", newWindowShadowHolder);
+		newWindowPenumbraShadow["ZIndex"] = 0;
+		newWindowPenumbraShadow["SliceCenter"] = Rect.new(10, 10, 118, 118);
+		newWindowPenumbraShadow["ScaleType"] = Enum.ScaleType.Slice;
+		newWindowPenumbraShadow["ImageColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowPenumbraShadow["ImageTransparency"] = 0.8799999952316284;
+		newWindowPenumbraShadow["AnchorPoint"] = Vector2.new(0.5, 0.5);
+		newWindowPenumbraShadow["Image"] = [[rbxassetid://1316045217]];
+		newWindowPenumbraShadow["Size"] = UDim2.new(1, 2, 1, 2);
+		newWindowPenumbraShadow["Name"] = [[penumbraShadow]];
+		newWindowPenumbraShadow["BackgroundTransparency"] = 1;
+		newWindowPenumbraShadow["Position"] = UDim2.new(0.5, 0, 0.5, 0);
+
+		local newWindowAmbientShadow = Instance.new("ImageLabel", newWindowShadowHolder);
+		newWindowAmbientShadow["ZIndex"] = 0;
+		newWindowAmbientShadow["SliceCenter"] = Rect.new(10, 10, 118, 118);
+		newWindowAmbientShadow["ScaleType"] = Enum.ScaleType.Slice;
+		newWindowAmbientShadow["ImageColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowAmbientShadow["ImageTransparency"] = 0.8799999952316284;
+		newWindowAmbientShadow["AnchorPoint"] = Vector2.new(0.5, 0.5);
+		newWindowAmbientShadow["Image"] = [[rbxassetid://1316045217]];
+		newWindowAmbientShadow["Size"] = UDim2.new(1, 2, 1, 2);
+		newWindowAmbientShadow["Name"] = [[ambientShadow]];
+		newWindowAmbientShadow["BackgroundTransparency"] = 1;
+		newWindowAmbientShadow["Position"] = UDim2.new(0.5, 0, 0.5, 0);
+
+	end
+
+	if windowSettings["pattern"] == true then
+		local newWindowBackground = Instance.new("ImageLabel", newWindow);
+		newWindowBackground["SliceCenter"] = Rect.new(0, 256, 0, 256);
+		newWindowBackground["ScaleType"] = Enum.ScaleType.Tile;
+		newWindowBackground["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+		newWindowBackground["ImageTransparency"] = 0.6000000238418579;
+		newWindowBackground["Image"] = [[rbxassetid://2151741365]];
+		newWindowBackground["TileSize"] = UDim2.new(0, 250, 0, 250);
+		newWindowBackground["Size"] = newWindow["Size"];
+		newWindowBackground["Name"] = [[background]];
+		newWindowBackground["BackgroundTransparency"] = 1;
+	end
+
+	if windowSettings["sidebar"] == true then
+		local newWindowSidebar = Instance.new("Frame", newWindow);
+		newWindowSidebar["BorderSizePixel"] = 0;
+		newWindowSidebar["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowSidebar["Size"] = UDim2.new(0, 130, 0, 400);
+		newWindowSidebar["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowSidebar["Name"] = [[windowSidebar]];
+		newWindowSidebar["Visible"] = false;
+		newWindowSidebar["ZIndex"] = 2;
+
+		local newWindowSidebarUICorner = Instance.new("UICorner", newWindowSidebar);
+		newWindowSidebarUICorner["CornerRadius"] = UDim.new(0, 7);
+
+		local newWindowSidebarTabs = Instance.new("ScrollingFrame", newWindowSidebar);
+		newWindowSidebarTabs["Active"] = true;
+		newWindowSidebarTabs["BorderSizePixel"] = 0;
+		newWindowSidebarTabs["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+		newWindowSidebarTabs["BackgroundTransparency"] = 1;
+		newWindowSidebarTabs["Size"] = UDim2.new(0, 130, 0, 355);
+		newWindowSidebarTabs["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowSidebarTabs["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowSidebarTabs["Position"] = UDim2.new(0, 0, 0.11249999701976776, 0);
+		newWindowSidebarTabs["Name"] = [[Tabs]];
+		newWindowSidebarTabs["ZIndex"] = 2;
+
+		local newWindowSidebarTabsUIListLayout = Instance.new("UIListLayout", newWindowSidebarTabs);
+		newWindowSidebarTabsUIListLayout["Padding"] = UDim.new(0, 4);
+		newWindowSidebarTabsUIListLayout["SortOrder"] = Enum.SortOrder.LayoutOrder;
+
+		local newWindowSidebarTabsUIPadding = Instance.new("UIPadding", newWindowSidebarTabs);
+		newWindowSidebarTabsUIPadding["PaddingLeft"] = UDim.new(0, 4);
+
+		local newWindowSidebarButton = Instance.new("ImageButton", newWindow);
+		newWindowSidebarButton["LayoutOrder"] = 6;
+		newWindowSidebarButton["Image"] = [[rbxassetid://3926307971]];
+		newWindowSidebarButton["ImageRectSize"] = Vector2.new(36, 36);
+		newWindowSidebarButton["Size"] = UDim2.new(0, 25, 0, 25);
+		newWindowSidebarButton["Name"] = [[windowIcon]];
+		newWindowSidebarButton["ImageRectOffset"] = Vector2.new(404, 44);
+		newWindowSidebarButton["Position"] = UDim2.new(0.019611308351159096, 0, 0.013276862911880016, 0);
+		newWindowSidebarButton["BackgroundTransparency"] = 1;
+		newWindowSidebarButton["ZIndex"] = 2;
+
+		newWindowSidebar:SetAttribute("prevSize", newWindowSidebar.Size)
+		newWindowSidebarButton.MouseButton1Click:connect(function()
+			if newWindowSidebar.Visible == false then
+				newWindowSidebar["Size"] = UDim2.new(0, 0, 0, 0);
+				newWindowSidebar.Visible = true
+				newWindowSidebar:TweenSize(newWindowSidebar:GetAttribute("prevSize"), Enum.EasingDirection.Out, Enum.EasingStyle.Sine, UIAnimationSpeed, true);
+
+				local Object = newWindowSidebarButton -- The object you want to tween.
+				local tweenInfo = TweenInfo.new(UIAnimationSpeed, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
+				local Tween = TweenService:Create(Object, tweenInfo, {Rotation = -90})
+				Tween:Play()
+
+			elseif newWindowSidebar.Visible == true then
+				local Object = newWindowSidebarButton -- The object you want to tween.
+				local tweenInfo = TweenInfo.new(UIAnimationSpeed, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0)
+				local Tween = TweenService:Create(Object, tweenInfo, {Rotation = 0})
+				Tween:Play()
+
+				newWindowSidebar:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Sine, UIAnimationSpeed, true);
+				task.wait(0.04)
+				newWindowSidebar.Visible = false
+			end
+		end)
+
+		if windowSettings["sidebarMainName"] == nil then
+			windowSettings["sidebarMainName"] = "main";
+		end
+
+		local newWindowSidebarTab = Instance.new("TextButton", newWindowSidebarTabs);
+		newWindowSidebarTab["BorderSizePixel"] = 0;
+		newWindowSidebarTab["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+		newWindowSidebarTab["TextSize"] = 16;
+		newWindowSidebarTab["FontFace"] = Font.new([[rbxasset://fonts/families/Ubuntu.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+		newWindowSidebarTab["TextColor3"] = Color3.fromRGB(221, 221, 221);
+		newWindowSidebarTab["Size"] = UDim2.new(0, 124, 0, 40);
+		newWindowSidebarTab["Name"] = [[tab]];
+		newWindowSidebarTab["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowSidebarTab["Text"] = windowSettings["sidebarMainName"];
+		newWindowSidebarTab["Position"] = UDim2.new(0.04525686427950859, 0, 0.09749999642372131, 0);
+		newWindowSidebarTab["BackgroundTransparency"] = 1;
+		newWindowSidebarTab["ZIndex"] = 2;
+		newWindowSidebarTab.MouseButton1Click:connect(function() 
+			for i, v in pairs(newWindow:GetChildren()) do
+				if v:IsA("ScrollingFrame") then
+					v.Visible = false
+				end
+			end
+
+			newWindowContent.Visible = true;
+		end)
+
+		local newWindowSidebarTabUnderline = Instance.new("Frame", newWindowSidebarTab);
+		newWindowSidebarTabUnderline["BorderSizePixel"] = 0;
+		newWindowSidebarTabUnderline["BackgroundColor3"] = Color3.fromRGB(151, 151, 151);
+		newWindowSidebarTabUnderline["Size"] = UDim2.new(0, 110, 0, 1);
+		newWindowSidebarTabUnderline["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+		newWindowSidebarTabUnderline["Position"] = UDim2.new(0.03846153989434242, 0, 1, 0);
+		newWindowSidebarTabUnderline["Name"] = [[underline]];
+		newWindowSidebarTabUnderline["ZIndex"] = 2;
+
+		local newWindowSidebarTabIcon = Instance.new("ImageButton", newWindowSidebarTab);
+		newWindowSidebarTabIcon["ImageTransparency"] = 0.10000000149011612;
+		newWindowSidebarTabIcon["Image"] = [[rbxassetid://3926305904]];
+		newWindowSidebarTabIcon["ImageRectSize"] = Vector2.new(36, 36);
+		newWindowSidebarTabIcon["Size"] = UDim2.new(0, 25, 0, 25);
+		newWindowSidebarTabIcon["Name"] = [[home]];
+		newWindowSidebarTabIcon["ImageRectOffset"] = Vector2.new(964, 204);
+		newWindowSidebarTabIcon["Position"] = UDim2.new(0.04615384712815285, 0, 0.15000000596046448, 0);
+		newWindowSidebarTabIcon["BackgroundTransparency"] = 1;
+		newWindowSidebarTabIcon["ZIndex"] = 2;
+	end
+
+	return {
+		newWindow;
+		toggleVisibility = toggleVisibility;
+		clear = clear;
+
+		setWindowLight = setWindowLight;
+		setWindowName = setWindowName;
+	}
 end
 
-local function addStroke(instance: Instance, thickness: number, color: Color3, transparency: number?)
-    local s = Instance.new("UIStroke")
-    s.Thickness = thickness
-    s.Color = color
-    s.Transparency = transparency or 0
-    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    s.Parent = instance :: any
-    return s
+function Kings.newTextElement(window, tab, text)
+	local newWindowElementText = Instance.new("Frame", window[1][tab]);
+	newWindowElementText["BorderSizePixel"] = 0;
+	newWindowElementText["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementText["BackgroundTransparency"] = 0.9;
+	newWindowElementText["Size"] = UDim2.new(0, 274, 0, 80);
+	newWindowElementText["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementText["Position"] = UDim2.new(0.04333333298563957, 0, 0.13019390404224396, 0);
+	newWindowElementText["Name"] = "windowElementText";
+
+	local newWindowElementTextUICorner = Instance.new("UICorner", newWindowElementText);
+	newWindowElementTextUICorner["CornerRadius"] = UDim.new(0, 7);
+
+	local newWindowElementTextUIStroke = Instance.new("UIStroke", newWindowElementText);
+	newWindowElementTextUIStroke["Color"] = Color3.fromRGB(20, 20, 20);
+	newWindowElementTextUIStroke["Thickness"] = 0.51;
+
+	local newWindowElementTextTextLabel = Instance.new("TextLabel", newWindowElementText);
+	newWindowElementTextTextLabel["TextWrapped"] = true;
+	newWindowElementTextTextLabel["BorderSizePixel"] = 0;
+	newWindowElementTextTextLabel["TextYAlignment"] = Enum.TextYAlignment.Top;
+	newWindowElementTextTextLabel["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementTextTextLabel["TextXAlignment"] = Enum.TextXAlignment.Left;
+	newWindowElementTextTextLabel["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+	newWindowElementTextTextLabel["TextSize"] = 15;
+	newWindowElementTextTextLabel["TextColor3"] = Color3.fromRGB(221, 221, 221);
+	newWindowElementTextTextLabel["Size"] = UDim2.new(0, 253, 0, 68);
+	newWindowElementTextTextLabel["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementTextTextLabel["Text"] = text;
+	newWindowElementTextTextLabel["BackgroundTransparency"] = 1;
+	newWindowElementTextTextLabel["Position"] = UDim2.new(0.040145985782146454, 0, 0.09500000298023224, 0);
+
+	-- element functions
+	local function setText(text)
+		newWindowElementTextTextLabel["Text"] = text;
+	end
+
+	local function destroy()
+		newWindowElementText:Destroy()	
+	end
+	
+	local function getText()
+		return newWindowElementTextTextLabel["Text"];
+	end
+
+	local function setOutlineColor(color)
+		newWindowElementTextUIStroke["Color"] = color;
+	end
+
+	local function setBackgroundColor(color)
+		newWindowElementText["BackgroundColor3"] = color;
+	end
+
+	local function setTransparency(integer) 
+		newWindowElementText["BackgroundTransparency"] = integer;
+	end
+
+	return {
+		newWindowElementText;
+		setText = setText;
+		getText = getText;
+		setOutlineColor = setOutlineColor;
+		setBackgroundColor = setBackgroundColor;
+		setTransparency = setTransparency;
+		destroy = destroy;
+	}
 end
 
-local function addPadding(instance: Instance, p: number)
-    local ui = Instance.new("UIPadding")
-    ui.PaddingTop = UDim.new(0, p)
-    ui.PaddingBottom = UDim.new(0, p)
-    ui.PaddingLeft = UDim.new(0, p)
-    ui.PaddingRight = UDim.new(0, p)
-    ui.Parent = instance :: any
-    return ui
+function Kings.newButtonElement(window, tab, text, buttonType)
+	--window = window[1];
+
+	local buttonIconId, buttonIconOffset, buttonIconSize, buttonIconColor;
+
+	if buttonType == nil or buttonType == 0 then
+		buttonIconId = "rbxassetid://3926305904";
+		buttonIconOffset = Vector2.new(604, 764);
+		buttonIconSize = Vector2.new(36, 36);
+		buttonIconColor = Color3.fromRGB(126, 255, 163);
+
+	elseif buttonType == 1 then
+		buttonIconId = "rbxassetid://3926305904";
+		buttonIconOffset = Vector2.new(644, 724);
+		buttonIconSize = Vector2.new(36, 36);
+		buttonIconColor = Color3.fromRGB(220, 80, 80);
+
+	elseif buttonType == 2 then
+		buttonIconId = "rbxassetid://3926305904";
+		buttonIconOffset = Vector2.new(116, 4);
+		buttonIconSize = Vector2.new(24, 24);
+		buttonIconColor = Color3.fromRGB(206, 220, 53);
+	end
+
+	local newWindowElementButton = Instance.new("Frame", window[1][tab]);
+	newWindowElementButton["BorderSizePixel"] = 0;
+	newWindowElementButton["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementButton["BackgroundTransparency"] = 0.8999999761581421;
+	newWindowElementButton["Size"] = UDim2.new(window[1]["Size"].X.Scale, window[1]["Size"].X.Offset -26, 0, 40);
+	newWindowElementButton["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementButton["Position"] = UDim2.new(0.04333333298563957, 0, 0.0379403792321682, 0);
+	newWindowElementButton["Name"] = "windowElementButton";
+
+	local newWindowElementButtonUIStroke = Instance.new("UIStroke", newWindowElementButton);
+	newWindowElementButtonUIStroke["Color"] = Color3.fromRGB(20, 20, 20);
+	newWindowElementButtonUIStroke["Thickness"] = 0.5099999904632568;
+
+	local newWindowElementButtonImage = Instance.new("ImageButton", newWindowElementButton);
+	newWindowElementButtonImage["ImageColor3"] = buttonIconColor;
+	newWindowElementButtonImage["LayoutOrder"] = 7;
+	newWindowElementButtonImage["Image"] = buttonIconId;
+	newWindowElementButtonImage["ImageRectSize"] = buttonIconSize;
+	newWindowElementButtonImage["Size"] = UDim2.new(0, 25, 0, 25);
+	newWindowElementButtonImage["Name"] = [[icon]];
+	newWindowElementButtonImage["ImageRectOffset"] = buttonIconOffset;
+	newWindowElementButtonImage["Position"] = UDim2.new(0.8722627758979797, 0, 0.17499999701976776, 0);
+	newWindowElementButtonImage["BackgroundTransparency"] = 1;
+
+	local newWindowElementButtonButton = Instance.new("TextButton", newWindowElementButton);
+	newWindowElementButtonButton["TextWrapped"] = true;
+	newWindowElementButtonButton["BorderSizePixel"] = 0;
+	newWindowElementButtonButton["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementButtonButton["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+	newWindowElementButtonButton["TextSize"] = 15;
+	newWindowElementButtonButton["TextColor3"] = Color3.fromRGB(221, 221, 221);
+	--newWindowElementButtonButton["Size"] = UDim2.new(0, 274, 0, 40);
+	newWindowElementButtonButton["Size"] = UDim2.new(window[1]["Size"].X.Scale, window[1]["Size"].X.Offset -26, 0, 40);
+	newWindowElementButtonButton["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementButtonButton["Text"] = text;
+	newWindowElementButtonButton["BackgroundTransparency"] = 1;
+
+	local newWindowElementButtonUICorner = Instance.new("UICorner", newWindowElementButton);
+	newWindowElementButtonUICorner["CornerRadius"] = UDim.new(0, 7);
+
+	-- element functions
+	local function onclick(func)
+		newWindowElementButtonButton.MouseButton1Click:connect(func)
+		newWindowElementButtonImage.MouseButton1Click:connect(func)
+	end
+	
+	local function destroy()
+		newWindowElementButton:Destroy()
+	end
+
+	local function setText(text)
+		newWindowElementButtonButton["Text"] = text;
+	end
+
+	local function getText()
+		return newWindowElementButtonButton["Text"];
+	end
+
+	local function setOutlineColor(color)
+		newWindowElementButtonUIStroke["Color"] = color;
+	end
+
+	local function setBackgroundColor(color)
+		newWindowElementButton["BackgroundColor3"] = color;
+	end
+
+	local function setTransparency(integer) 
+		newWindowElementButton["BackgroundTransparency"] = integer;
+	end	
+
+	return {
+		newWindowElementButton;
+		onclick = onclick;
+
+		setText = setText;
+		getText = getText;
+		setOutlineColor = setOutlineColor;
+		setBackgroundColor = setBackgroundColor;
+		setTransparency = setTransparency;
+		
+		destroy = destroy;
+	}
 end
 
-local function formatNumber(n: number)
-    local s = tostring(math.floor(n * 100 + 0.5)/100)
-    return s
+function Kings.newCategory(window, tab, name)
+	local newWindowCategory = Instance.new("Frame", window[1][tab]);
+	newWindowCategory["BorderSizePixel"] = 0;
+	newWindowCategory["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowCategory["BackgroundTransparency"] = 1;
+	newWindowCategory["Size"] = UDim2.new(0, 275, 0, 40);
+	newWindowCategory["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowCategory["Position"] = UDim2.new(0.0416666679084301, 0, 0.4487534761428833, 0);
+	newWindowCategory["Name"] = [[Category]];
+
+	local newWindowCategoryTextLabel = Instance.new("TextLabel", newWindowCategory);
+	newWindowCategoryTextLabel["BorderSizePixel"] = 0;
+	newWindowCategoryTextLabel["TextYAlignment"] = Enum.TextYAlignment.Bottom;
+	newWindowCategoryTextLabel["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowCategoryTextLabel["TextXAlignment"] = Enum.TextXAlignment.Left;
+	newWindowCategoryTextLabel["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+	newWindowCategoryTextLabel["TextSize"] = 16;
+	newWindowCategoryTextLabel["TextColor3"] = Color3.fromRGB(91, 91, 91);
+	newWindowCategoryTextLabel["Size"] = UDim2.new(0, 274, 0, 40);
+	newWindowCategoryTextLabel["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowCategoryTextLabel["Text"] = name;
+	newWindowCategoryTextLabel["BackgroundTransparency"] = 1;
+
+	return {
+		newWindowCategory;
+	}
 end
 
-local function makeShadow(parent: Instance)
-    -- simple ambient shadow using an ImageLabel; avoids external asset by drawing with a gradient-filled frame
-    local shadow = Instance.new("Frame")
-    shadow.BackgroundColor3 = Color3.new(0,0,0)
-    shadow.BackgroundTransparency = 0.6
-    shadow.Size = UDim2.new(1, 20, 1, 20)
-    shadow.Position = UDim2.new(0, -10, 0, -10)
-    shadow.ZIndex = 0
-    makeRound(shadow, 20)
-    shadow.Parent = parent
-    return shadow
+function Kings.newSwitchElement(window, tab, text, state)
+	local stateColor, stateIcon, stateOffset;
+
+	stateColor = Color3.fromRGB(116, 116, 116);
+	stateIcon = "rbxassetid://3926307971";
+	stateOffset = Vector2.new(804, 124);
+
+	if state == true then
+		stateColor = Color3.fromRGB(118, 150, 255);
+		stateIcon = "rbxassetid://3926307971";
+		stateOffset = Vector2.new(764, 244);
+	end
+
+	local newWindowElementSwitch = Instance.new("Frame", window[1][tab]);
+	newWindowElementSwitch["BorderSizePixel"] = 0;
+	newWindowElementSwitch["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementSwitch["BackgroundTransparency"] = 0.8999999761581421;
+	newWindowElementSwitch["Size"] = UDim2.new(0, 274, 0, 40);
+	newWindowElementSwitch["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementSwitch["Position"] = UDim2.new(0.04333333298563957, 0, 0.0379403792321682, 0);
+	newWindowElementSwitch["Name"] = [[windowElementSwitch]];
+
+	local newWindowElementSwitchUICorner = Instance.new("UICorner", newWindowElementSwitch);
+	newWindowElementSwitchUICorner["CornerRadius"] = UDim.new(0, 7);
+
+	local newWindowElementSwitchUIStroke = Instance.new("UIStroke", newWindowElementSwitch);
+	newWindowElementSwitchUIStroke["Color"] = Color3.fromRGB(20, 20, 20);
+	newWindowElementSwitchUIStroke["Thickness"] = 0.5099999904632568;
+
+	local newWindowElementSwitchTextLabel = Instance.new("TextButton", newWindowElementSwitch);
+	newWindowElementSwitchTextLabel["TextWrapped"] = true;
+	newWindowElementSwitchTextLabel["BorderSizePixel"] = 0;
+	newWindowElementSwitchTextLabel["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementSwitchTextLabel["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+	newWindowElementSwitchTextLabel["TextSize"] = 15;
+	newWindowElementSwitchTextLabel["TextColor3"] = Color3.fromRGB(221, 221, 221);
+	newWindowElementSwitchTextLabel["Size"] = UDim2.new(0, 274, 0, 40);
+	newWindowElementSwitchTextLabel["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementSwitchTextLabel["Text"] = text;
+	newWindowElementSwitchTextLabel["BackgroundTransparency"] = 1;
+
+	local newWindowElementSwitchState = Instance.new("ImageButton", newWindowElementSwitch);
+	newWindowElementSwitchState["ImageColor3"] = stateColor;
+	newWindowElementSwitchState["LayoutOrder"] = 20;
+	newWindowElementSwitchState["Image"] = stateIcon;
+	newWindowElementSwitchState["ImageRectSize"] = Vector2.new(36, 36);
+	newWindowElementSwitchState["Size"] = UDim2.new(0, 25, 0, 25);
+	newWindowElementSwitchState["Name"] = "off";
+	newWindowElementSwitchState["ImageRectOffset"] = stateOffset;
+	newWindowElementSwitchState["Position"] = UDim2.new(0.8722627758979797, 0, 0.17499999701976776, 0);
+	newWindowElementSwitchState["BackgroundTransparency"] = 1;
+	newWindowElementSwitchState["Visible"] = true;
+
+	-- element functions
+	local function switch()
+		if state == true then
+			state = false;
+
+			newWindowElementSwitchState["ImageColor3"] = Color3.fromRGB(116, 116, 116);
+			newWindowElementSwitchState["Image"] = "rbxassetid://3926307971";
+			newWindowElementSwitchState["ImageRectOffset"] = Vector2.new(804, 124);
+		elseif state == false then
+			state = true;
+
+			newWindowElementSwitchState["ImageColor3"] = Color3.fromRGB(118, 150, 255);
+			newWindowElementSwitchState["Image"] = "rbxassetid://3926307971";
+			newWindowElementSwitchState["ImageRectOffset"] = Vector2.new(764, 244);
+
+		end
+	end
+
+	local function onclick(func)
+		newWindowElementSwitchTextLabel.MouseButton1Click:connect(func)
+		newWindowElementSwitchState.MouseButton1Click:connect(func)
+	end
+
+	local function setText(text)
+		newWindowElementSwitchTextLabel["Text"] = text;
+	end
+
+	local function getText()
+		return newWindowElementSwitchTextLabel["Text"];
+	end
+
+	local function setOutlineColor(color)
+		newWindowElementSwitchUIStroke["Color"] = color;
+	end
+
+	local function setBackgroundColor(color)
+		newWindowElementSwitch["BackgroundColor3"] = color;
+	end
+
+	local function setTransparency(integer) 
+		newWindowElementSwitch["BackgroundTransparency"] = integer;
+	end	
+
+	if state == true then
+		newWindowElementSwitchState["ImageColor3"] = Color3.fromRGB(118, 150, 255);
+		newWindowElementSwitchState["Image"] = "rbxassetid://3926307971";
+		newWindowElementSwitchState["ImageRectOffset"] = Vector2.new(764, 244);
+	elseif state == false then
+		newWindowElementSwitchState["ImageColor3"] = Color3.fromRGB(116, 116, 116);
+		newWindowElementSwitchState["Image"] = "rbxassetid://3926307971";
+		newWindowElementSwitchState["ImageRectOffset"] = Vector2.new(804, 124);
+	end
+
+	local function getState()
+		return state;
+	end
+
+	local function setState(newState)
+		state = newState;
+
+		if state == true then
+			newWindowElementSwitchState["ImageColor3"] = Color3.fromRGB(118, 150, 255);
+			newWindowElementSwitchState["Image"] = "rbxassetid://3926307971";
+			newWindowElementSwitchState["ImageRectOffset"] = Vector2.new(764, 244);
+		elseif state == false then
+			newWindowElementSwitchState["ImageColor3"] = Color3.fromRGB(116, 116, 116);
+			newWindowElementSwitchState["Image"] = "rbxassetid://3926307971";
+			newWindowElementSwitchState["ImageRectOffset"] = Vector2.new(804, 124);
+		end
+	end
+
+	return {
+		newWindowElementSwitch;
+		onclick = onclick;
+
+		setText = setText;
+		getText = getText;
+		setOutlineColor = setOutlineColor;
+		setBackgroundColor = setBackgroundColor;
+		setTransparency = setTransparency;
+		getState = getState;
+		setState = setState;
+		switch = switch;
+	}
 end
 
-local function draggable(handle: GuiObject, root: GuiObject)
-    local dragging = false
-    local dragStart: Vector2
-    local startPos: UDim2
+function Kings.newInputElement(window, tab, text, placeholder)
+	local newWindowElementInput = Instance.new("Frame", window[1][tab]);
+	newWindowElementInput["BorderSizePixel"] = 0;
+	newWindowElementInput["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementInput["BackgroundTransparency"] = 0.8999999761581421;
+	newWindowElementInput["Size"] = UDim2.new(0, 274, 0, 60);
+	newWindowElementInput["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementInput["Position"] = UDim2.new(0.04333333298563957, 0, 0.5817174315452576, 0);
+	newWindowElementInput["Name"] = [[windowElementInput]];
 
-    local function begin(input: InputObject)
-        dragging = true
-        dragStart = input.Position
-        startPos = root.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
+	local newWindowElementInputUIStroke = Instance.new("UIStroke", newWindowElementInput);
+	newWindowElementInputUIStroke["Color"] = Color3.fromRGB(20, 20, 20);
+	newWindowElementInputUIStroke["Thickness"] = 0.5099999904632568;
 
-    local function update(input: InputObject)
-        if dragging then
-            local delta = input.Position - dragStart
-            root.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
-        end
-    end
+	local newWindowElementInputTextLabel = Instance.new("TextLabel", newWindowElementInput);
+	newWindowElementInputTextLabel["TextWrapped"] = true;
+	newWindowElementInputTextLabel["BorderSizePixel"] = 0;
+	newWindowElementInputTextLabel["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementInputTextLabel["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+	newWindowElementInputTextLabel["TextSize"] = 15;
+	newWindowElementInputTextLabel["TextColor3"] = Color3.fromRGB(221, 221, 221);
+	newWindowElementInputTextLabel["Size"] = UDim2.new(0, 274, 0, 35);
+	newWindowElementInputTextLabel["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementInputTextLabel["Text"] = text;
+	newWindowElementInputTextLabel["BackgroundTransparency"] = 1;
 
-    handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            begin(input)
-        end
-    end)
-    handle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            update(input)
-        end
-    end)
+	local newWindowElementInputIcon = Instance.new("ImageButton", newWindowElementInput);
+	newWindowElementInputIcon["ImageColor3"] = Color3.fromRGB(189, 72, 255);
+	newWindowElementInputIcon["Image"] = [[rbxassetid://3926305904]];
+	newWindowElementInputIcon["ImageRectSize"] = Vector2.new(36, 36);
+	newWindowElementInputIcon["Size"] = UDim2.new(0, 25, 0, 25);
+	newWindowElementInputIcon["Name"] = [[icon]];
+	newWindowElementInputIcon["ImageRectOffset"] = Vector2.new(764, 84);
+	newWindowElementInputIcon["Position"] = UDim2.new(0.8705109357833862, 0, 0.16999968886375427, 0);
+	newWindowElementInputIcon["BackgroundTransparency"] = 1;
+
+	local newWindowElementInputTextBox = Instance.new("TextBox", newWindowElementInput);
+	newWindowElementInputTextBox["BorderSizePixel"] = 0;
+	newWindowElementInputTextBox["TextSize"] = 15;
+	newWindowElementInputTextBox["BackgroundColor3"] = Color3.fromRGB(101, 101, 101);
+	newWindowElementInputTextBox["TextColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementInputTextBox["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Italic);
+	newWindowElementInputTextBox["BackgroundTransparency"] = 1;
+	newWindowElementInputTextBox["PlaceholderText"] = placeholder;
+	newWindowElementInputTextBox["Size"] = UDim2.new(0, 274, 0, 25);
+	newWindowElementInputTextBox["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementInputTextBox["Text"] = [[]];
+	newWindowElementInputTextBox["Position"] = UDim2.new(0, 0, 0.5833333134651184, 0);
+
+	local newWindowElementInputTextBoxUICorner = Instance.new("UICorner", newWindowElementInputTextBox);
+	newWindowElementInputTextBoxUICorner["CornerRadius"] = UDim.new(0, 7);
+
+	local newWindowElementInputUICorner = Instance.new("UICorner", newWindowElementInput);
+	newWindowElementInputUICorner["CornerRadius"] = UDim.new(0, 7);
+
+	local function setInput(inp)
+		newWindowElementInputTextBox["Text"] = inp;
+	end
+	
+	local function destroy()
+		newWindowElementInput:Destroy()
+	end
+
+	local function getInput()
+		return newWindowElementInputTextBox["Text"];
+	end
+
+	local function setText(text)
+		newWindowElementInputTextLabel["Text"] = text;
+	end
+
+	local function setOutlineColor(color)
+		newWindowElementInputUIStroke["Color"] = color;
+	end
+
+	local function setBackgroundColor(color)
+		newWindowElementInput["BackgroundColor3"] = color;
+	end
+
+	local function setTransparency(integer) 
+		newWindowElementInput["BackgroundTransparency"] = integer;
+	end	
+
+	return {
+		newWindowElementInput;
+
+		setInput = setInput;
+		getInput = getInput;
+		setText = setText;
+		setOutlineColor = setOutlineColor;
+		setBackgroundColor = setBackgroundColor;
+		setTransparency = setTransparency;
+		destroy = destroy;
+	}
 end
 
-local function makeSnow(container: GuiObject)
-    local running = true
-    local connections = {}
+function Kings.newTab(window, name)
+	local newWindowContent = Instance.new("ScrollingFrame", window[1]);
+	newWindowContent["Active"] = true;
+	newWindowContent["BorderSizePixel"] = 0;
+	newWindowContent["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowContent["BackgroundTransparency"] = 1;
+	newWindowContent["Size"] = UDim2.new(0, 300, 0, 369);
+	newWindowContent["Size"] = newWindowContent["Size"] + UDim2.new(0, 0, 0, -31);
+	newWindowContent["ScrollBarImageColor3"] = Color3.fromRGB(71, 71, 71);
+	newWindowContent["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowContent["ScrollBarThickness"] = 6;
+	newWindowContent["Position"] = UDim2.new(0, 0, 0.07750000059604645, 0);
+	newWindowContent["Name"] = name;
+	newWindowContent["Visible"] = false;
 
-    task.spawn(function()
-        while running do
-            -- Create a snowflake as a TextLabel "❄"
-            local flake = Instance.new("TextLabel")
-            flake.Text = "❄"
-            flake.Font = Enum.Font.GothamBold
-            flake.TextScaled = true
-            flake.BackgroundTransparency = 1
-            flake.Size = UDim2.fromOffset(math.random(8,16), math.random(8,16))
-            flake.TextTransparency = math.random(0,2)/10
-            flake.TextColor3 = Color3.fromRGB(245, 250, 255)
-            flake.ZIndex = 50
+	local function automaticHeight()
+		local canvSize = 0;
 
-            local width = container.AbsoluteSize.X
-            local startX = math.random(0, math.max(1, width))
-            flake.Position = UDim2.new(0, startX, 0, -20)
-            flake.Parent = container
+		for i, v in pairs(newWindowContent:GetChildren()) do
+			if v:IsA("Frame") then
+				canvSize = canvSize + v.Size.Y.Offset + 7;
+			end
+		end
 
-            local destY = container.AbsoluteSize.Y + 30
-            local driftX = math.random(-60, 60)
-            local t = TweenService:Create(flake, TweenInfo.new(math.random(5,10), Enum.EasingStyle.Linear), {
-                Position = UDim2.new(0, startX + driftX, 0, destY),
-                TextTransparency = 1
-            })
-            t:Play()
-            task.delay(math.random(5,10), function() if flake then flake:Destroy() end end)
+		newWindowContent.CanvasSize = UDim2.new(0, 0, 0, canvSize)
+		task.wait(5)
+		automaticHeight()
+	end
+	spawn(automaticHeight);
 
-            task.wait(0.15)
-        end
-    end)
+	local function clear()
+		for i, v in pairs(newWindowContent:GetChildren()) do
+			if v:IsA("Frame") then 
+				v:Destroy();
+			end
+		end
+	end
 
-    return {
-        Stop = function()
-            running = false
-            for _,con in ipairs(connections) do pcall(function() con:Disconnect() end) end
-        end
-    }
+	local newWindowContentUIPadding = Instance.new("UIPadding", newWindowContent);
+	newWindowContentUIPadding["PaddingTop"] = UDim.new(0, 8);
+
+	local newWindowContentUIListLayout = Instance.new("UIListLayout", newWindowContent);
+	newWindowContentUIListLayout["HorizontalAlignment"] = Enum.HorizontalAlignment.Center;
+	newWindowContentUIListLayout["Padding"] = UDim.new(0, 7);
+	newWindowContentUIListLayout["SortOrder"] = Enum.SortOrder.LayoutOrder;	
+
+	local function destroy()
+		newWindowContent:Destroy()
+	end
+	
+	return {
+		newWindowContent;
+		clear = clear;
+		destroy = destroy;
+	}
 end
 
-local function pulseGlow(stroked: UIStroke, color: Color3)
-    local t1 = TweenService:Create(stroked, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-        Color = color,
-        Thickness = 2.5,
-        Transparency = 0.25
-    })
-    t1:Play()
-    return t1
+function Kings.newSidebarOption(window, tabToView, text, icon)
+	window = window[1];
+
+	local newWindowSidebarTab = Instance.new("TextButton", window["windowSidebar"]["Tabs"]);
+	newWindowSidebarTab["BorderSizePixel"] = 0;
+	newWindowSidebarTab["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowSidebarTab["TextSize"] = 16;
+	newWindowSidebarTab["FontFace"] = Font.new([[rbxasset://fonts/families/Ubuntu.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+	newWindowSidebarTab["TextColor3"] = Color3.fromRGB(221, 221, 221);
+	newWindowSidebarTab["Size"] = UDim2.new(0, 124, 0, 40);
+	newWindowSidebarTab["Name"] = [[tab]];
+	newWindowSidebarTab["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowSidebarTab["Text"] = text;
+	newWindowSidebarTab["Position"] = UDim2.new(0.04525686427950859, 0, 0.09749999642372131, 0);
+	newWindowSidebarTab["BackgroundTransparency"] = 1;
+	newWindowSidebarTab["ZIndex"] = 2;
+	newWindowSidebarTab.MouseButton1Click:connect(function()
+		for i, v in pairs(window:GetChildren()) do
+			if v:IsA("ScrollingFrame") then
+				v.Visible = false
+			end
+		end
+
+		tabToView[1].Visible = true;
+	end)
+
+
+	local newWindowSidebarTabUnderline = Instance.new("Frame", newWindowSidebarTab);
+	newWindowSidebarTabUnderline["BorderSizePixel"] = 0;
+	newWindowSidebarTabUnderline["BackgroundColor3"] = Color3.fromRGB(151, 151, 151);
+	newWindowSidebarTabUnderline["Size"] = UDim2.new(0, 110, 0, 1);
+	newWindowSidebarTabUnderline["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowSidebarTabUnderline["Position"] = UDim2.new(0.03846153989434242, 0, 1, 0);
+	newWindowSidebarTabUnderline["Name"] = [[underline]];
+	newWindowSidebarTabUnderline["ZIndex"] = 2;
+
+
+
+	local newWindowSidebarTabIcon = Instance.new("ImageButton", newWindowSidebarTab);
+	newWindowSidebarTabIcon["ImageTransparency"] = 0.10000000149011612;
+
+	if icon == nil then
+		newWindowSidebarTabIcon["Image"] = [[rbxassetid://3926305904]];
+		newWindowSidebarTabIcon["ImageRectOffset"] = Vector2.new(964, 204);
+		newWindowSidebarTabIcon["ImageRectSize"] = Vector2.new(36, 36);
+	else
+		newWindowSidebarTabIcon["Image"] = icon[1];
+		newWindowSidebarTabIcon["ImageRectOffset"] = icon[2];
+		if icon[3] ~= nil then
+			newWindowSidebarTabIcon["ImageRectSize"] = icon[3];
+		end
+	end
+
+
+	newWindowSidebarTabIcon["Size"] = UDim2.new(0, 25, 0, 25);
+	newWindowSidebarTabIcon["Name"] = [[home]];
+	newWindowSidebarTabIcon["Position"] = UDim2.new(0.04615384712815285, 0, 0.15000000596046448, 0);
+	newWindowSidebarTabIcon["BackgroundTransparency"] = 1;
+	newWindowSidebarTabIcon["ZIndex"] = 2;
+
+
+
+	local function onclick(func)
+		newWindowSidebarTab.MouseButton1Click:connect(func)
+		newWindowSidebarTabIcon.MouseButton1Click:connect(func)
+	end
+	
+	local function destroy()
+		newWindowSidebarTab:Destroy()
+	end
+
+	return {
+		newWindowSidebarTab;
+		onclick = onclick;
+		destroy = destroy;
+	}
 end
 
--- Window + Components
-local Window = {}
-Window.__index = Window
+function Kings.newSliderElement(window, tab, text, defaultValue)
+	local newWindowElementSlider = Instance.new("TextButton", window[1][tab]);
+	newWindowElementSlider["BorderSizePixel"] = 0;
+	newWindowElementSlider["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementSlider["BackgroundTransparency"] = 0.8999999761581421;
+	newWindowElementSlider["Size"] = UDim2.new(0, 274, 0, 60);
+	newWindowElementSlider["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementSlider["Position"] = UDim2.new(0.04333333298563957, 0, 0.31855955719947815, 0);
+	newWindowElementSlider["Name"] = [[windowElementSlider]];
+	newWindowElementSlider["Text"] = "";
 
-function Window:AddSection(title: string): Section
-    local section = Instance.new("Frame")
-    section.Name = "Section"
-    section.BackgroundTransparency = 0.15
-    section.BackgroundColor3 = Color3.fromRGB(24,24,28)
-    section.Size = UDim2.new(1, -12, 0, 44)
-    section.AutomaticSize = Enum.AutomaticSize.Y
-    section.ClipsDescendants = true
-    section.ZIndex = 5
-    makeRound(section, 12)
-    addPadding(section, 10)
-    section.Parent = self._content
+	local newWindowElementSliderUIStroke = Instance.new("UIStroke", newWindowElementSlider);
+	newWindowElementSliderUIStroke["Color"] = Color3.fromRGB(20, 20, 20);
+	newWindowElementSliderUIStroke["Thickness"] = 0.5099999904632568;
 
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 18)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.Text = title
-    titleLabel.TextSize = 14
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextColor3 = Color3.new(1,1,1)
-    titleLabel.TextTransparency = 0.1
-    titleLabel.Parent = section
+	local newWindowElementSliderTextLabel = Instance.new("TextLabel", newWindowElementSlider);
+	newWindowElementSliderTextLabel["TextWrapped"] = true;
+	newWindowElementSliderTextLabel["BorderSizePixel"] = 0;
+	newWindowElementSliderTextLabel["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementSliderTextLabel["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+	newWindowElementSliderTextLabel["TextSize"] = 15;
+	newWindowElementSliderTextLabel["TextColor3"] = Color3.fromRGB(221, 221, 221);
+	newWindowElementSliderTextLabel["Size"] = UDim2.new(0, 274, 0, 40);
+	newWindowElementSliderTextLabel["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementSliderTextLabel["Text"] = text;
+	newWindowElementSliderTextLabel["BackgroundTransparency"] = 1;
+	newWindowElementSliderTextLabel["Position"] = UDim2.new(0, 0, -0.014285714365541935, 0);
 
-    local list = Instance.new("UIListLayout")
-    list.Padding = UDim.new(0, 8)
-    list.SortOrder = Enum.SortOrder.LayoutOrder
-    list.Parent = section
+	local newWindowElementSliderIcon = Instance.new("ImageButton", newWindowElementSlider);
+	newWindowElementSliderIcon["ImageColor3"] = Color3.fromRGB(255, 161, 98);
+	newWindowElementSliderIcon["LayoutOrder"] = 5;
+	newWindowElementSliderIcon["Image"] = [[rbxassetid://3926305904]];
+	newWindowElementSliderIcon["ImageRectSize"] = Vector2.new(36, 36);
+	newWindowElementSliderIcon["Size"] = UDim2.new(0, 25, 0, 25);
+	newWindowElementSliderIcon["Name"] = [[icon]];
+	newWindowElementSliderIcon["ImageRectOffset"] = Vector2.new(4, 124);
+	newWindowElementSliderIcon["Position"] = UDim2.new(0.8722627758979797, 0, 0.10357142984867096, 0);
+	newWindowElementSliderIcon["BackgroundTransparency"] = 1;
 
-    local function mkRow(height: number): Frame
-        local row = Instance.new("Frame")
-        row.BackgroundTransparency = 1
-        row.Size = UDim2.new(1, 0, 0, height)
-        row.Parent = section
-        return row
-    end
+	local newWindowElementSliderSlider = Instance.new("Frame", newWindowElementSlider);
+	newWindowElementSliderSlider["BorderSizePixel"] = 0;
+	newWindowElementSliderSlider["BackgroundColor3"] = Color3.fromRGB(255, 161, 98);
+	newWindowElementSliderSlider["BackgroundTransparency"] = 0.10000000149011612;
+	newWindowElementSliderSlider["Size"] = UDim2.new(0, 0, 0, 8);
+	newWindowElementSliderSlider["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementSliderSlider["Position"] = UDim2.new(0.06526785343885422, 0, 0.6976191401481628, 0);
+	newWindowElementSliderSlider["Name"] = "slider";
 
-    local themedColor = self._theme
-    local glowEnabled = self._glowEnabled
+	local newWindowElementSliderSliderOutline = Instance.new("Frame", newWindowElementSlider);
+	newWindowElementSliderSliderOutline["BorderSizePixel"] = 0;
+	newWindowElementSliderSliderOutline["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
+	newWindowElementSliderSliderOutline["BackgroundTransparency"] = 0.8999999761581421;
+	newWindowElementSliderSliderOutline["Size"] = UDim2.new(0, 238, 0, 8);
+	newWindowElementSliderSliderOutline["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+	newWindowElementSliderSliderOutline["Position"] = UDim2.new(0.06526785343885422, 0, 0.6976191401481628, 0);
+	newWindowElementSliderSliderOutline["Name"] = [[sliderOutline]];
 
-    local api = {}
+	local minSliderValue = 0
+	local maxSliderValue = 100
 
-    function api:AddButton(text: string, callback: () -> ())
-        local row = mkRow(32)
-        local btn = Instance.new("TextButton")
-        btn.Text = text
-        btn.AutoButtonColor = true
-        btn.BackgroundColor3 = Color3.fromRGB(35,35,42)
-        btn.Size = UDim2.new(1, 0, 1, 0)
-        btn.Font = Enum.Font.GothamSemibold
-        btn.TextSize = 14
-        btn.TextColor3 = Color3.new(1,1,1)
-        btn.Parent = row
-        makeRound(btn, 10)
-        local st = addStroke(btn, 1.5, themedColor, 0.35)
-        if glowEnabled then pulseGlow(st, themedColor) end
-        btn.MouseButton1Click:Connect(function()
-            if callback then
-                task.spawn(callback)
-            end
-        end)
-        table.insert(self._themed, st)
-        return btn
-    end
+	local dragging = false
+	local inputChangedConnection
 
-    function api:AddToggle(text: string, default: boolean, callback: (boolean) -> ())
-        local row = mkRow(32)
-        local label = Instance.new("TextLabel")
-        label.BackgroundTransparency = 1
-        label.Size = UDim2.new(1, -64, 1, 0)
-        label.Text = text
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 14
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = Color3.new(1,1,1)
-        label.Parent = row
+	local sliderWidth = newWindowElementSliderSliderOutline.AbsoluteSize.X;
+	local val = 0;
 
-        local toggle = Instance.new("TextButton")
-        toggle.AnchorPoint = Vector2.new(1, 0.5)
-        toggle.Position = UDim2.new(1, 0, 0.5, 0)
-        toggle.Size = UDim2.new(0, 54, 0, 24)
-        toggle.Text = ""
-        toggle.BackgroundColor3 = Color3.fromRGB(36, 36, 42)
-        toggle.Parent = row
-        makeRound(toggle, 12)
-        local st = addStroke(toggle, 1.5, themedColor, 0.35)
-        table.insert(self._themed, st)
+	local title = newWindowElementSliderTextLabel["Text"];
+	newWindowElementSliderTextLabel["Text"] = title.." ["..defaultValue.."]";
 
-        local knob = Instance.new("Frame")
-        knob.Size = UDim2.new(0, 20, 0, 20)
-        knob.Position = UDim2.new(0, 2, 0.5, -10)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        knob.Parent = toggle
-        makeRound(knob, 10)
+	newWindowElementSlider.MouseButton1Down:Connect(function()
+		dragging = true
+		inputChangedConnection = game:GetService("UserInputService").InputChanged:Connect(function(input)
+			if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+				local sliderPosition = input.Position.X - newWindowElementSliderSliderOutline.AbsolutePosition.X
+				sliderPosition = math.clamp(sliderPosition, 0, sliderWidth)
+				local newValue = sliderPosition / sliderWidth * (maxSliderValue - minSliderValue) + minSliderValue
+				newWindowElementSliderTextLabel["Text"] = title.." ["..tostring(math.floor(newValue)).."]";
+				val = tostring(math.floor(newValue))
+				newWindowElementSliderSlider["Size"] = UDim2.new(0, sliderPosition, 0, 8);
+			end
+		end)
+	end)
 
-        local on = default or false
-        local function apply(state: boolean)
-            on = state
-            TweenService:Create(knob, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10),
-                BackgroundColor3 = state and themedColor or Color3.fromRGB(255,255,255)
-            }):Play()
-            TweenService:Create(toggle, TweenInfo.new(0.18), {
-                BackgroundColor3 = state and Color3.fromRGB(46, 46, 56) or Color3.fromRGB(36,36,42)
-            }):Play()
-            if callback then task.spawn(callback, state) end
-        end
-        apply(on)
-        toggle.MouseButton1Click:Connect(function() apply(not on) end)
+	newWindowElementSlider.MouseButton1Up:Connect(function()
+		dragging = false
+		if inputChangedConnection then
+			inputChangedConnection:Disconnect()
+		end
+	end)
 
-        return {
-            Set = function(_, v: boolean) apply(v) end,
-            Get = function() return on end,
-        }
-    end
+	local function getValue()
+		return val;
+	end
 
-    function api:AddSlider(text: string, min: number, max: number, default: number, step: number?, callback: (number)->())
-        step = step or 1
-        local row = mkRow(40)
+	local function minValue(val)
+		minSliderValue = val;
+	end
 
-        local label = Instance.new("TextLabel")
-        label.BackgroundTransparency = 1
-        label.Size = UDim2.new(1, 0, 0, 18)
-        label.Text = string.format("%s  (%s–%s)", text, formatNumber(min), formatNumber(max))
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 14
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = Color3.new(1,1,1)
-        label.Parent = row
+	local function maxValue(val)
+		maxSliderValue = val;
+	end
 
-        local bar = Instance.new("Frame")
-        bar.Size = UDim2.new(1, 0, 0, 8)
-        bar.Position = UDim2.new(0, 0, 0, 22)
-        bar.BackgroundColor3 = Color3.fromRGB(36,36,42)
-        bar.Parent = row
-        makeRound(bar, 6)
-        local st = addStroke(bar, 1.5, themedColor, 0.35)
-        table.insert(self._themed, st)
+	local newWindowElementSliderSliderOutlineUICorner = Instance.new("UICorner", newWindowElementSliderSliderOutline);
+	newWindowElementSliderSliderOutlineUICorner["CornerRadius"] = UDim.new(0, 7);
 
-        local fill = Instance.new("Frame")
-        fill.BackgroundColor3 = themedColor
-        fill.Size = UDim2.new(0, 0, 1, 0)
-        fill.Parent = bar
-        makeRound(fill, 6)
+	local newWindowElementSliderSliderOutlineUIStroke = Instance.new("UIStroke", newWindowElementSliderSliderOutline);
+	newWindowElementSliderSliderOutlineUIStroke["Color"] = Color3.fromRGB(255, 161, 98);
+	newWindowElementSliderSliderOutlineUIStroke["Thickness"] = 0.5099999904632568;
 
-        local handle = Instance.new("Frame")
-        handle.Size = UDim2.new(0, 14, 0, 14)
-        handle.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        handle.Position = UDim2.new(0, -7, 0.5, -7)
-        handle.Parent = bar
-        makeRound(handle, 7)
+	local newWindowElementSliderSliderUICorner = Instance.new("UICorner", newWindowElementSliderSlider);
+	newWindowElementSliderSliderUICorner["CornerRadius"] = UDim.new(0, 7);
 
-        local value = default
-        local function setValue(v: number)
-            v = math.clamp(math.floor(v/step + 0.5)*step, min, max)
-            value = v
-            local alpha = (v - min) / (max - min)
-            fill.Size = UDim2.new(alpha, 0, 1, 0)
-            handle.Position = UDim2.new(alpha, -7, 0.5, -7)
-            if callback then task.spawn(callback, value) end
-        end
-        setValue(default)
+	local newWindowElementSliderSliderUIStroke = Instance.new("UIStroke", newWindowElementSliderSlider);
+	newWindowElementSliderSliderUIStroke["Color"] = Color3.fromRGB(255, 161, 98);
+	newWindowElementSliderSliderUIStroke["Thickness"] = 0.5099999904632568;
 
-        local dragging = false
-        local function inputToValue(x: number)
-            local abs = bar.AbsoluteSize.X
-            local rel = math.clamp((x - bar.AbsolutePosition.X) / (abs > 0 and abs or 1), 0, 1)
-            setValue(min + rel * (max - min))
-        end
+	return {
+		newWindowElementSlider;
+		getValue = getValue;
+		minValue = minValue;
+		maxValue = maxValue;
 
-        bar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                inputToValue(input.Position.X)
-            end
-        end)
-        bar.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                if dragging then inputToValue(input.Position.X) end
-            end
-        end)
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end)
-
-        return {
-            Set = function(_, v: number) setValue(v) end,
-            Get = function() return value end,
-        }
-    end
-
-    function api:AddDropdown(text: string, options: {string}, default: string | {string}?, multi: boolean?, callback: (any)->())
-        multi = multi or false
-
-        local row = mkRow(34)
-        local btn = Instance.new("TextButton")
-        btn.BackgroundColor3 = Color3.fromRGB(35,35,42)
-        btn.TextXAlignment = Enum.TextXAlignment.Left
-        btn.AutoButtonColor = true
-        btn.Size = UDim2.new(1, 0, 1, 0)
-        btn.Text = text .. " ▼"
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 14
-        btn.TextColor3 = Color3.new(1,1,1)
-        btn.Parent = row
-        makeRound(btn, 10)
-        local st = addStroke(btn, 1.5, themedColor, 0.35)
-        table.insert(self._themed, st)
-        if self._glowEnabled then pulseGlow(st, themedColor) end
-
-        local listHolder = Instance.new("Frame")
-        listHolder.Visible = false
-        listHolder.BackgroundColor3 = Color3.fromRGB(28,28,34)
-        listHolder.Size = UDim2.new(1, 0, 0, 0)
-        listHolder.AutomaticSize = Enum.AutomaticSize.Y
-        listHolder.Parent = row
-        makeRound(listHolder, 10)
-        addPadding(listHolder, 6)
-
-        local layout = Instance.new("UIListLayout")
-        layout.Padding = UDim.new(0, 6)
-        layout.Parent = listHolder
-
-        local selection: any = multi and {} or nil
-
-        local function refreshLabel()
-            if multi then
-                local names = table.concat(selection, ", ")
-                btn.Text = (#names > 0 and (text .. ": " .. names) or (text .. " ▼"))
-            else
-                btn.Text = (selection and (text .. ": " .. tostring(selection)) or (text .. " ▼"))
-            end
-        end
-
-        local function addOption(opt: string)
-            local o = Instance.new("TextButton")
-            o.Text = opt
-            o.BackgroundColor3 = Color3.fromRGB(36,36,42)
-            o.TextColor3 = Color3.new(1,1,1)
-            o.Font = Enum.Font.Gotham
-            o.TextSize = 14
-            o.Size = UDim2.new(1, 0, 0, 28)
-            o.AutoButtonColor = true
-            makeRound(o, 8)
-            local st2 = addStroke(o, 1, themedColor, 0.5)
-            table.insert(self._themed, st2)
-            o.Parent = listHolder
-
-            o.MouseButton1Click:Connect(function()
-                if multi then
-                    local found = table.find(selection, opt)
-                    if found then table.remove(selection, found) else table.insert(selection, opt) end
-                    refreshLabel()
-                    if callback then task.spawn(callback, selection) end
-                else
-                    selection = opt
-                    refreshLabel()
-                    if callback then task.spawn(callback, selection) end
-                    listHolder.Visible = false
-                end
-            end)
-        end
-
-        for _,opt in ipairs(options) do addOption(opt) end
-        if default then
-            if multi and type(default) == "table" then selection = default elseif not multi and type(default) ~= "table" then selection = default end
-            refreshLabel()
-        end
-
-        btn.MouseButton1Click:Connect(function()
-            listHolder.Visible = not listHolder.Visible
-        end)
-
-        return {
-            Set = function(_, v: any) selection = v; refreshLabel() end,
-            Get = function() return selection end
-        }
-    end
-
-    function api:AddInput(text: string, placeholder: string?, numeric: boolean?, callback: (string)->())
-        local row = mkRow(32)
-        local box = Instance.new("TextBox")
-        box.PlaceholderText = placeholder or ""
-        box.Text = ""
-        box.ClearTextOnFocus = false
-        box.BackgroundColor3 = Color3.fromRGB(35,35,42)
-        box.TextColor3 = Color3.new(1,1,1)
-        box.Size = UDim2.new(1, 0, 1, 0)
-        box.Font = Enum.Font.Gotham
-        box.TextSize = 14
-        box.TextXAlignment = Enum.TextXAlignment.Left
-        box.Parent = row
-        makeRound(box, 10)
-        local st = addStroke(box, 1.5, themedColor, 0.35)
-        table.insert(self._themed, st)
-        if self._glowEnabled then pulseGlow(st, themedColor) end
-
-        box.FocusLost:Connect(function()
-            local txt = box.Text
-            if numeric then
-                local num = tonumber(txt)
-                if not num then
-                    box.Text = ""
-                    return
-                end
-                if callback then task.spawn(callback, tostring(num)) end
-            else
-                if callback then task.spawn(callback, txt) end
-            end
-        end)
-        return box
-    end
-
-    return setmetatable(api, {__index = self})
+	}
 end
 
-function Window:SetThemeColor(color: Color3)
-    self._theme = color
-    for _,obj in ipairs(self._themed) do
-        pcall(function() (obj :: UIStroke).Color = color end)
-    end
-    if self._titleBar then
-        pcall(function()
-            (self._titleBar:FindFirstChild("Accent") :: Frame).BackgroundColor3 = color
-        end)
-    end
-end
-
-function Window:SetGlow(enabled: boolean, color: Color3?)
-    self._glowEnabled = enabled
-    local c = color or self._theme
-    for _,obj in ipairs(self._themed) do
-        if obj:IsA("UIStroke") then
-            obj.Transparency = enabled and 0.25 or 0.5
-            obj.Thickness = enabled and 2.5 or 1.5
-            obj.Color = c
-        end
-    end
-end
-
-function Window:Open()
-    if self._open then return end
-    self._open = true
-    self._root.Visible = true
-    TweenService:Create(self._root, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
-    if self._snowController == nil and self._snowEnabled then
-        self._snowController = makeSnow(self._root)
-    end
-end
-
-function Window:Close()
-    if not self._open then return end
-    self._open = false
-    local t = TweenService:Create(self._root, TweenInfo.new(0.18), {GroupTransparency = 1})
-    t:Play()
-    task.delay(0.2, function() self._root.Visible = false end)
-end
-
-function Window:Toggle()
-    if self._open then self:Close() else self:Open() end
-end
-
-function Window:Destroy()
-    if self._snowController then
-        pcall(function() self._snowController.Stop() end)
-    end
-    if self._gui then self._gui:Destroy() end
-end
-
-function AstraUI.createWindow(config): Window
-    config = config or {}
-    local theme = config.themeColor or Color3.fromRGB(255, 86, 146)
-    local glow = (config.glow == nil) and true or config.glow
-    local snow = (config.snow == nil) and true or config.snow
-    local floating = (config.floating == nil) and true or config.floating
-    local title = config.title or "AstraUI"
-    local hotkey = config.hotkey or Enum.KeyCode.RightShift
-
-    -- ScreenGui
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "AstraUI"
-    gui.IgnoreGuiInset = true
-    gui.ResetOnSpawn = false
-    gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-    gui.Parent = playerGui
-
-    -- Floating launcher
-    local launcher = Instance.new("TextButton")
-    launcher.Name = "Launcher"
-    launcher.Visible = floating
-    launcher.AnchorPoint = Vector2.new(1, 0.5)
-    launcher.Position = UDim2.new(1, -20, 0.5, 0)
-    launcher.Size = UDim2.new(0, 56, 0, 56)
-    launcher.Text = "◎"
-    launcher.TextScaled = true
-    launcher.BackgroundColor3 = Color3.fromRGB(24,24,28)
-    launcher.TextColor3 = Color3.new(1,1,1)
-    launcher.AutoButtonColor = true
-    launcher.Parent = gui
-    makeRound(launcher, 28)
-    addStroke(launcher, 2, theme, 0.4)
-    draggable(launcher, launcher)
-
-    -- Window root uses CanvasGroup-style transparency via a Frame + UIGroup
-    local root = Instance.new("Frame")
-    root.Name = "Window"
-    root.Visible = false
-    root.AnchorPoint = Vector2.new(0.5, 0.5)
-    root.Position = UDim2.new(0.5, 0, 0.5, 0)
-    root.Size = UDim2.new(0, 460, 0, 420)
-    root.BackgroundColor3 = Color3.fromRGB(18,18,22)
-    root.Parent = gui
-    makeRound(root, 18)
-    addPadding(root, 10)
-    makeShadow(root)
-
-    -- Fake group transparency
-    local group = Instance.new("UIGroup")
-    group.GroupTransparency = 1
-    group.Parent = root
-
-    -- Title bar
-    local titleBar = Instance.new("Frame")
-    titleBar.Name = "TitleBar"
-    titleBar.Parent = root
-    titleBar.Size = UDim2.new(1, 0, 0, 40)
-    titleBar.BackgroundTransparency = 1
-
-    local accent = Instance.new("Frame")
-    accent.Name = "Accent"
-    accent.Size = UDim2.new(0, 6, 1, -6)
-    accent.Position = UDim2.new(0, 6, 0, 3)
-    accent.BackgroundColor3 = theme
-    accent.Parent = titleBar
-    makeRound(accent, 6)
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = title
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 18
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextColor3 = Color3.new(1,1,1)
-    titleLabel.Position = UDim2.new(0, 16, 0, 0)
-    titleLabel.Size = UDim2.new(1, -80, 1, 0)
-    titleLabel.Parent = titleBar
-
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Text = "✕"
-    closeBtn.Size = UDim2.new(0, 32, 0, 28)
-    closeBtn.Position = UDim2.new(1, -38, 0, 6)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(35,35,42)
-    closeBtn.TextColor3 = Color3.new(1,1,1)
-    closeBtn.AutoButtonColor = true
-    closeBtn.Parent = titleBar
-    makeRound(closeBtn, 8)
-    addStroke(closeBtn, 1, theme, 0.5)
-
-    draggable(titleBar, root)
-
-    local content = Instance.new("Frame")
-    content.Name = "Content"
-    content.Parent = root
-    content.Position = UDim2.new(0, 6, 0, 48)
-    content.Size = UDim2.new(1, -12, 1, -54)
-    content.BackgroundTransparency = 1
-
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 10)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Parent = content
-
-    local api = setmetatable({
-        _gui = gui,
-        _root = group,
-        _frame = root,
-        _titleBar = titleBar,
-        _content = content,
-        _theme = theme,
-        _glowEnabled = glow,
-        _themed = {} :: {Instance},
-        _snowEnabled = snow,
-        _snowController = nil,
-        _open = false,
-    }, Window)
-
-    -- connections
-    launcher.MouseButton1Click:Connect(function() api:Toggle() end)
-    closeBtn.MouseButton1Click:Connect(function() api:Close() end)
-
-    -- Keyboard toggle (desktop)
-    UserInputService.InputBegan:Connect(function(input, gp)
-        if gp then return end
-        if input.KeyCode == hotkey then api:Toggle() end
-    end)
-
-    return api
-end
-
-return AstraUI
+return Kings;
