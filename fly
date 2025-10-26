@@ -1,1119 +1,1635 @@
+--[[
+	STELLAR UI 库 - 霓虹玻璃态改造版
+	设计要求:
+	1. 透明玻璃态 (亚克力/磨砂玻璃效果)
+	2. 粉色霓虹主题 (热粉色主色调 + 辉光)
+	3. 现代化交互 (流畅动画和视觉反馈)
+	4. 创意元素 (动态背景、音效)
+	5. 性能优化 (使用 UIBlur, 避免 UIShadow)
+]]
+
 if (game:GetService("CoreGui")):FindFirstChild("STELLAR") and (game:GetService("CoreGui")):FindFirstChild("ScreenGui") then
-	(game:GetService("CoreGui")).STELLAR:Destroy();
-	(game:GetService("CoreGui")).ScreenGui:Destroy();
-end;
-
--- 新的颜色配置 - 粉色霓虹主题
-_G.Primary = Color3.fromRGB(255, 105, 180); -- 热粉色
-_G.Dark = Color3.fromRGB(20, 20, 30); -- 深蓝黑背景
-_G.Third = Color3.fromRGB(255, 20, 147); -- 深粉色
-_G.Accent = Color3.fromRGB(255, 182, 193); -- 浅粉色
-_G.Neon = Color3.fromRGB(255, 105, 180); -- 霓虹粉
-
-function CreateRounded(Parent, Size)
-	local Rounded = Instance.new("UICorner");
-	Rounded.Name = "Rounded";
-	Rounded.Parent = Parent;
-	Rounded.CornerRadius = UDim.new(0, Size);
-end;
-
-local UserInputService = game:GetService("UserInputService");
-local TweenService = game:GetService("TweenService");
-local RunService = game:GetService("RunService");
-
-function CreateGlowEffect(frame)
-	local glow = Instance.new("ImageLabel")
-	glow.Name = "Glow"
-	glow.Image = "rbxassetid://8992230675"
-	glow.ScaleType = Enum.ScaleType.Slice
-	glow.SliceScale = 0.05
-	glow.SliceCenter = Rect.new(100, 100, 100, 100)
-	glow.BackgroundTransparency = 1
-	glow.ImageTransparency = 0.8
-	glow.ImageColor3 = _G.Neon
-	glow.Size = UDim2.new(1, 40, 1, 40)
-	glow.Position = UDim2.new(0, -20, 0, -20)
-	glow.ZIndex = -1
-	glow.Parent = frame
-	
-	return glow
+	(game:GetService("CoreGui")).STELLAR:Destroy()
+	(game:GetService("CoreGui")).ScreenGui:Destroy()
 end
 
+-- 1. --- 重新定义全局颜色主题 ---
+_G.NeonPink = Color3.fromRGB(255, 0, 191) -- 主霓虹粉色
+_G.DarkGlass = Color3.fromRGB(10, 5, 15) -- 玻璃背景暗色 (深紫)
+_G.LightText = Color3.fromRGB(255, 255, 255) -- 亮色文字
+_G.DimText = Color3.fromRGB(200, 200, 220) -- 暗淡文字 (偏紫白)
+_G.Highlight = Color3.fromRGB(40, 25, 45) -- 悬停和交互高亮色
+
+-- 2. --- 服务和全局函数 ---
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+
+-- 音效: 为点击事件创建全局音效
+local clickSound = Instance.new("Sound", SoundService)
+clickSound.SoundId = "rbxassetid://130553958" -- Roblox 默认点击音效
+clickSound.Volume = 0.5
+local function PlayClickSound()
+	clickSound:Play()
+end
+
+-- 助手: 创建圆角
+function CreateRounded(Parent, Size)
+	local Rounded = Instance.new("UICorner")
+	Rounded.Name = "Rounded"
+	Rounded.Parent = Parent
+	Rounded.CornerRadius = UDim.new(0, Size)
+	return Rounded
+end
+
+-- 助手: 创建玻璃边缘高光
+function CreateGlassBorder(Parent)
+	local Stroke = Instance.new("UIStroke")
+	Stroke.Color = Color3.fromRGB(255, 255, 255)
+	Stroke.Transparency = 0.85
+	Stroke.Thickness = 1
+	Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	Stroke.Parent = Parent
+	return Stroke
+end
+
+-- 助手: 创建霓虹辉光
+function CreateNeonGlow(Parent, Color, Thickness)
+	local Glow = Instance.new("UIStroke")
+	Glow.Color = Color or _G.NeonPink
+	Glow.Thickness = Thickness or 3
+	Glow.Transparency = 0.6
+	Glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	Glow.Parent = Parent
+	return Glow
+end
+
+-- 助手: 窗口拖动
 function MakeDraggable(topbarobject, object)
-	local Dragging = nil;
-	local DragInput = nil;
-	local DragStart = nil;
-	local StartPosition = nil;
+	local Dragging = nil
+	local DragInput = nil
+	local DragStart = nil
+	local StartPosition = nil
 	local function Update(input)
-		local Delta = input.Position - DragStart;
-		local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y);
-		local Tween = TweenService:Create(object, TweenInfo.new(0.15), {
+		local Delta = input.Position - DragStart
+		local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+		-- 使用更平滑的缓动
+		local Tween = TweenService:Create(object, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 			Position = pos
-		});
-		Tween:Play();
-	end;
+		})
+		Tween:Play()
+	end
 	topbarobject.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			Dragging = true;
-			DragStart = input.Position;
-			StartPosition = object.Position;
+			Dragging = true
+			DragStart = input.Position
+			StartPosition = object.Position
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
-					Dragging = false;
-				end;
-			end);
-		end;
-	end);
+					Dragging = false
+				end
+			end)
+		end
+	end)
 	topbarobject.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			DragInput = input;
-		end;
-	end);
+			DragInput = input
+		end
+	end)
 	UserInputService.InputChanged:Connect(function(input)
 		if input == DragInput and Dragging then
-			Update(input);
-		end;
-	end);
-end;
+			Update(input)
+		end
+	end)
+end
 
-local ScreenGui = Instance.new("ScreenGui");
-ScreenGui.Parent = game.CoreGui;
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+-- 3. --- UI 组件 (重构设计) ---
 
--- 改造后的启动按钮 - 透明圆形
-local OutlineButton = Instance.new("Frame");
-OutlineButton.Name = "OutlineButton";
-OutlineButton.Parent = ScreenGui;
-OutlineButton.ClipsDescendants = true;
-OutlineButton.BackgroundColor3 = _G.Neon;
-OutlineButton.BackgroundTransparency = 0.9;
-OutlineButton.Position = UDim2.new(0, 10, 0, 10);
-OutlineButton.Size = UDim2.new(0, 60, 0, 60);
-CreateRounded(OutlineButton, 100);
+-- 悬浮按钮 (用于打开/关闭UI)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- 添加发光效果
-CreateGlowEffect(OutlineButton)
+local OutlineButton = Instance.new("Frame")
+OutlineButton.Name = "OutlineButton"
+OutlineButton.Parent = ScreenGui
+OutlineButton.ClipsDescendants = true
+OutlineButton.BackgroundColor3 = _G.DarkGlass
+OutlineButton.BackgroundTransparency = 0.2 -- 玻璃态
+OutlineButton.Position = UDim2.new(0, 10, 0, 10)
+OutlineButton.Size = UDim2.new(0, 50, 0, 50)
+CreateRounded(OutlineButton, 14)
+CreateGlassBorder(OutlineButton)
+Instance.new("UIBlur", OutlineButton).Size = 16 -- 模糊效果
 
-local ImageButton = Instance.new("ImageButton");
-ImageButton.Parent = OutlineButton;
-ImageButton.Position = UDim2.new(0.5, 0, 0.5, 0);
-ImageButton.Size = UDim2.new(0, 40, 0, 40);
-ImageButton.AnchorPoint = Vector2.new(0.5, 0.5);
-ImageButton.BackgroundColor3 = _G.Dark;
-ImageButton.ImageColor3 = _G.Neon;
-ImageButton.ImageTransparency = 0;
-ImageButton.BackgroundTransparency = 0.8;
-ImageButton.Image = "rbxassetid://105059922903197";
-ImageButton.AutoButtonColor = false;
-MakeDraggable(ImageButton, OutlineButton);
-CreateRounded(ImageButton, 100);
+local ImageButton = Instance.new("ImageButton")
+ImageButton.Parent = OutlineButton
+ImageButton.Position = UDim2.new(0.5, 0, 0.5, 0)
+ImageButton.Size = UDim2.new(0, 40, 0, 40)
+ImageButton.AnchorPoint = Vector2.new(0.5, 0.5)
+ImageButton.BackgroundColor3 = _G.NeonPink
+ImageButton.BackgroundTransparency = 1 -- 透明背景
+ImageButton.ImageColor3 = _G.NeonPink -- 图标使用霓虹色
+ImageButton.ImageTransparency = 0
+ImageButton.Image = "rbxassetid://105059922903197"
+ImageButton.AutoButtonColor = false
+CreateRounded(ImageButton, 10)
+
+MakeDraggable(ImageButton, OutlineButton)
 
 ImageButton.MouseButton1Click:connect(function()
-	(game.CoreGui:FindFirstChild("STELLAR")).Enabled = not (game.CoreGui:FindFirstChild("STELLAR")).Enabled;
-end);
+	PlayClickSound()
+	local stellarGui = game.CoreGui:FindFirstChild("STELLAR")
+	if stellarGui then
+		stellarGui.Enabled = not stellarGui.Enabled
+	end
+end)
+
+-- 悬停动画
+ImageButton.MouseEnter:Connect(function()
+	TweenService:Create(ImageButton, TweenInfo.new(0.2), { ImageColor3 = _G.LightText }):Play()
+end)
+ImageButton.MouseLeave:Connect(function()
+	TweenService:Create(ImageButton, TweenInfo.new(0.2), { ImageColor3 = _G.NeonPink }):Play()
+end)
 
 -- 通知系统
-local NotificationFrame = Instance.new("ScreenGui");
-NotificationFrame.Name = "NotificationFrame";
-NotificationFrame.Parent = game.CoreGui;
-NotificationFrame.ZIndexBehavior = Enum.ZIndexBehavior.Global;
+local NotificationFrame = Instance.new("ScreenGui")
+NotificationFrame.Name = "NotificationFrame"
+NotificationFrame.Parent = game.CoreGui
+NotificationFrame.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
-local NotificationList = {};
+local NotificationList = {}
 local function RemoveOldestNotification()
 	if #NotificationList > 0 then
-		local removed = table.remove(NotificationList, 1);
+		local removed = table.remove(NotificationList, 1)
 		removed[1]:TweenPosition(UDim2.new(0.5, 0, -0.2, 0), "Out", "Quad", 0.4, true, function()
-			removed[1]:Destroy();
-		end);
-	end;
-end;
+			removed[1]:Destroy()
+		end)
+	end
+end
 
 spawn(function()
 	while wait() do
 		if #NotificationList > 0 then
-			wait(2);
-			RemoveOldestNotification();
-		end;
-	end;
-end);
+			wait(3) -- 持续时间 3 秒
+			RemoveOldestNotification()
+		end
+	end
+end)
 
-local Update = {};
-
+local Update = {}
 function Update:Notify(desc)
-	local Frame = Instance.new("Frame");
-	local Image = Instance.new("ImageLabel");
-	local Title = Instance.new("TextLabel");
-	local Desc = Instance.new("TextLabel");
-	local OutlineFrame = Instance.new("Frame");
-	
-	OutlineFrame.Name = "OutlineFrame";
-	OutlineFrame.Parent = NotificationFrame;
-	OutlineFrame.ClipsDescendants = true;
-	OutlineFrame.BackgroundColor3 = _G.Dark;
-	OutlineFrame.AnchorPoint = Vector2.new(0.5, 1);
-	OutlineFrame.BackgroundTransparency = 0.3;
-	OutlineFrame.Position = UDim2.new(0.5, 0, -0.2, 0);
-	OutlineFrame.Size = UDim2.new(0, 412, 0, 72);
-	
-	-- 添加发光效果
-	CreateGlowEffect(OutlineFrame)
-	
-	Frame.Name = "Frame";
-	Frame.Parent = OutlineFrame;
-	Frame.ClipsDescendants = true;
-	Frame.AnchorPoint = Vector2.new(0.5, 0.5);
-	Frame.BackgroundColor3 = _G.Dark;
-	Frame.BackgroundTransparency = 0.2;
-	Frame.Position = UDim2.new(0.5, 0, 0.5, 0);
-	Frame.Size = UDim2.new(0, 400, 0, 60);
+	local OutlineFrame = Instance.new("Frame")
+	local Frame = Instance.new("Frame")
+	local Image = Instance.new("ImageLabel")
+	local Title = Instance.new("TextLabel")
+	local Desc = Instance.new("TextLabel")
 
-	Image.Name = "Icon";
-	Image.Parent = Frame;
-	Image.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-	Image.BackgroundTransparency = 1;
-	Image.Position = UDim2.new(0, 8, 0, 8);
-	Image.Size = UDim2.new(0, 45, 0, 45);
-	Image.Image = "rbxassetid://105059922903197";
-	Image.ImageColor3 = _G.Neon;
+	OutlineFrame.Name = "OutlineFrame"
+	OutlineFrame.Parent = NotificationFrame
+	OutlineFrame.ClipsDescendants = true
+	OutlineFrame.BackgroundColor3 = _G.DarkGlass
+	OutlineFrame.AnchorPoint = Vector2.new(0.5, 1)
+	OutlineFrame.BackgroundTransparency = 0.2 -- 玻璃态
+	OutlineFrame.Position = UDim2.new(0.5, 0, -0.2, 0)
+	OutlineFrame.Size = UDim2.new(0, 412, 0, 72)
+	CreateRounded(OutlineFrame, 12)
+	CreateGlassBorder(OutlineFrame)
+	Instance.new("UIBlur", OutlineFrame).Size = 16
 
-	Title.Parent = Frame;
-	Title.BackgroundColor3 = _G.Primary;
-	Title.BackgroundTransparency = 1;
-	Title.Position = UDim2.new(0, 55, 0, 14);
-	Title.Size = UDim2.new(0, 10, 0, 20);
-	Title.Font = Enum.Font.GothamBold;
-	Title.Text = "STELLAR";
-	Title.TextColor3 = _G.Neon;
-	Title.TextSize = 16;
-	Title.TextXAlignment = Enum.TextXAlignment.Left;
+	Frame.Name = "Frame"
+	Frame.Parent = OutlineFrame
+	Frame.ClipsDescendants = true
+	Frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	Frame.BackgroundColor3 = _G.DarkGlass
+	Frame.BackgroundTransparency = 1 -- 内部框架透明
+	Frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	Frame.Size = UDim2.new(0, 400, 0, 60)
+	CreateRounded(Frame, 10)
 
-	Desc.Parent = Frame;
-	Desc.BackgroundColor3 = _G.Primary;
-	Desc.BackgroundTransparency = 1;
-	Desc.Position = UDim2.new(0, 55, 0, 33);
-	Desc.Size = UDim2.new(0, 10, 0, 10);
-	Desc.Font = Enum.Font.GothamSemibold;
-	Desc.TextTransparency = 0.3;
-	Desc.Text = desc;
-	Desc.TextColor3 = _G.Accent;
-	Desc.TextSize = 12;
-	Desc.TextXAlignment = Enum.TextXAlignment.Left;
+	Image.Name = "Icon"
+	Image.Parent = Frame
+	Image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	Image.BackgroundTransparency = 1
+	Image.Position = UDim2.new(0, 8, 0, 8)
+	Image.Size = UDim2.new(0, 45, 0, 45)
+	Image.Image = "rbxassetid://105059922903197"
+	Image.ImageColor3 = _G.NeonPink -- 图标霓虹色
 
-	CreateRounded(Frame, 12);
-	CreateRounded(OutlineFrame, 15);
+	Title.Parent = Frame
+	Title.BackgroundColor3 = _G.Primary
+	Title.BackgroundTransparency = 1
+	Title.Position = UDim2.new(0, 60, 0, 14)
+	Title.Size = UDim2.new(0, 10, 0, 20)
+	Title.Font = Enum.Font.GothamBold
+	Title.Text = "STELLAR"
+	Title.TextColor3 = _G.LightText
+	Title.TextSize = 16
+	Title.TextXAlignment = Enum.TextXAlignment.Left
 
-	OutlineFrame:TweenPosition(UDim2.new(0.5, 0, 0.1 + (#NotificationList) * 0.1, 0), "Out", "Quad", 0.4, true);
+	Desc.Parent = Frame
+	Desc.BackgroundColor3 = _G.Primary
+	Desc.BackgroundTransparency = 1
+	Desc.Position = UDim2.new(0, 60, 0, 33)
+	Desc.Size = UDim2.new(1, -60, 0, 10)
+	Desc.Font = Enum.Font.GothamSemibold
+	Desc.TextTransparency = 0.2
+	Desc.Text = desc
+	Desc.TextColor3 = _G.DimText
+	Desc.TextSize = 12
+	Desc.TextXAlignment = Enum.TextXAlignment.Left
+
+	OutlineFrame:TweenPosition(UDim2.new(0.5, 0, 0.1 + (#NotificationList) * 0.1, 0), "Out", "Quad", 0.4, true)
 	table.insert(NotificationList, {
 		OutlineFrame,
 		title
-	});
-end;
+	})
+end
 
+-- 加载屏幕
 function Update:StartLoad()
-	local Loader = Instance.new("ScreenGui");
-	Loader.Parent = game.CoreGui;
-	Loader.ZIndexBehavior = Enum.ZIndexBehavior.Global;
-	Loader.DisplayOrder = 1000;
+	local Loader = Instance.new("ScreenGui")
+	Loader.Parent = game.CoreGui
+	Loader.ZIndexBehavior = Enum.ZIndexBehavior.Global
+	Loader.DisplayOrder = 1000
 
-	local LoaderFrame = Instance.new("Frame");
-	LoaderFrame.Name = "LoaderFrame";
-	LoaderFrame.Parent = Loader;
-	LoaderFrame.ClipsDescendants = true;
-	LoaderFrame.BackgroundColor3 = _G.Dark;
-	LoaderFrame.BackgroundTransparency = 0.1;
-	LoaderFrame.AnchorPoint = Vector2.new(0.5, 0.5);
-	LoaderFrame.Position = UDim2.new(0.5, 0, 0.5, 0);
-	LoaderFrame.Size = UDim2.new(1.5, 0, 1.5, 0);
-	LoaderFrame.BorderSizePixel = 0;
+	-- 模糊背景
+	local BlurBackground = Instance.new("Frame")
+	BlurBackground.Parent = Loader
+	BlurBackground.BackgroundColor3 = _G.DarkGlass
+	BlurBackground.BackgroundTransparency = 0.1
+	BlurBackground.Size = UDim2.new(1, 0, 1, 0)
+	Instance.new("UIBlur", BlurBackground).Size = 24
 
-	-- 添加发光效果
-	CreateGlowEffect(LoaderFrame)
+	-- 标题
+	local TitleLoader = Instance.new("TextLabel")
+	TitleLoader.Parent = Loader
+	TitleLoader.Text = "STELLAR"
+	TitleLoader.Font = Enum.Font.FredokaOne
+	TitleLoader.TextSize = 60
+	TitleLoader.TextColor3 = _G.LightText
+	TitleLoader.TextTransparency = 0.1
+	TitleLoader.BackgroundTransparency = 1
+	TitleLoader.AnchorPoint = Vector2.new(0.5, 0.5)
+	TitleLoader.Position = UDim2.new(0.5, 0, 0.4, 0)
+	TitleLoader.Size = UDim2.new(0.8, 0, 0.2, 0)
 
-	local MainLoaderFrame = Instance.new("Frame");
-	MainLoaderFrame.Name = "MainLoaderFrame";
-	MainLoaderFrame.Parent = LoaderFrame;
-	MainLoaderFrame.ClipsDescendants = true;
-	MainLoaderFrame.BackgroundColor3 = _G.Dark;
-	MainLoaderFrame.BackgroundTransparency = 0.2;
-	MainLoaderFrame.AnchorPoint = Vector2.new(0.5, 0.5);
-	MainLoaderFrame.Position = UDim2.new(0.5, 0, 0.5, 0);
-	MainLoaderFrame.Size = UDim2.new(0.5, 0, 0.5, 0);
-	MainLoaderFrame.BorderSizePixel = 0;
+	-- 霓虹辉光 (通过描边实现)
+	local TitleGlow = Instance.new("UIStroke", TitleLoader)
+	TitleGlow.Color = _G.NeonPink
+	TitleGlow.Thickness = 2
+	TitleGlow.Transparency = 0.7
 
-	local TitleLoader = Instance.new("TextLabel");
-	TitleLoader.Parent = MainLoaderFrame;
-	TitleLoader.Text = "STELLAR";
-	TitleLoader.Font = Enum.Font.FredokaOne;
-	TitleLoader.TextSize = 50;
-	TitleLoader.TextColor3 = _G.Neon;
-	TitleLoader.BackgroundTransparency = 1;
-	TitleLoader.AnchorPoint = Vector2.new(0.5, 0.5);
-	TitleLoader.Position = UDim2.new(0.5, 0, 0.3, 0);
-	TitleLoader.Size = UDim2.new(0.8, 0, 0.2, 0);
-	TitleLoader.TextTransparency = 0;
+	-- 描述
+	local DescriptionLoader = Instance.new("TextLabel")
+	DescriptionLoader.Parent = Loader
+	DescriptionLoader.Text = "Loading.."
+	DescriptionLoader.Font = Enum.Font.Gotham
+	DescriptionLoader.TextSize = 16
+	DescriptionLoader.TextColor3 = _G.DimText
+	DescriptionLoader.BackgroundTransparency = 1
+	DescriptionLoader.AnchorPoint = Vector2.new(0.5, 0.5)
+	DescriptionLoader.Position = UDim2.new(0.5, 0, 0.55, 0)
+	DescriptionLoader.Size = UDim2.new(0.8, 0, 0.2, 0)
+	DescriptionLoader.TextTransparency = 0
 
-	local DescriptionLoader = Instance.new("TextLabel");
-	DescriptionLoader.Parent = MainLoaderFrame;
-	DescriptionLoader.Text = "Loading..";
-	DescriptionLoader.Font = Enum.Font.Gotham;
-	DescriptionLoader.TextSize = 15;
-	DescriptionLoader.TextColor3 = _G.Accent;
-	DescriptionLoader.BackgroundTransparency = 1;
-	DescriptionLoader.AnchorPoint = Vector2.new(0.5, 0.5);
-	DescriptionLoader.Position = UDim2.new(0.5, 0, 0.6, 0);
-	DescriptionLoader.Size = UDim2.new(0.8, 0, 0.2, 0);
-	DescriptionLoader.TextTransparency = 0;
+	-- 进度条
+	local LoadingBarBackground = Instance.new("Frame")
+	LoadingBarBackground.Parent = Loader
+	LoadingBarBackground.BackgroundColor3 = _G.Highlight
+	LoadingBarBackground.BackgroundTransparency = 0.5
+	LoadingBarBackground.AnchorPoint = Vector2.new(0.5, 0.5)
+	LoadingBarBackground.Position = UDim2.new(0.5, 0, 0.6, 0)
+	LoadingBarBackground.Size = UDim2.new(0.2, 0, 0, 4)
+	LoadingBarBackground.ClipsDescendants = true
+	LoadingBarBackground.BorderSizePixel = 0
+	CreateRounded(LoadingBarBackground, 4)
 
-	local LoadingBarBackground = Instance.new("Frame");
-	LoadingBarBackground.Parent = MainLoaderFrame;
-	LoadingBarBackground.BackgroundColor3 = Color3.fromRGB(50, 50, 50);
-	LoadingBarBackground.AnchorPoint = Vector2.new(0.5, 0.5);
-	LoadingBarBackground.Position = UDim2.new(0.5, 0, 0.7, 0);
-	LoadingBarBackground.Size = UDim2.new(0.7, 0, 0.05, 0);
-	LoadingBarBackground.ClipsDescendants = true;
-	LoadingBarBackground.BackgroundTransparency = 0.8;
-	LoadingBarBackground.BorderSizePixel = 0;
-	LoadingBarBackground.ZIndex = 2;
+	local LoadingBar = Instance.new("Frame")
+	LoadingBar.Parent = LoadingBarBackground
+	LoadingBar.BackgroundColor3 = _G.NeonPink
+	LoadingBar.Size = UDim2.new(0, 0, 1, 0)
+	CreateRounded(LoadingBar, 4)
 
-	local LoadingBar = Instance.new("Frame");
-	LoadingBar.Parent = LoadingBarBackground;
-	LoadingBar.BackgroundColor3 = _G.Neon;
-	LoadingBar.Size = UDim2.new(0, 0, 1, 0);
-	LoadingBar.ZIndex = 3;
+	-- 进度条辉光
+	local BarGlow = Instance.new("UIStroke", LoadingBarBackground)
+	BarGlow.Color = _G.NeonPink
+	BarGlow.Thickness = 3
+	BarGlow.Transparency = 0.6
 
-	CreateRounded(LoadingBarBackground, 20);
-	CreateRounded(LoadingBar, 20);
+	local tweenService = game:GetService("TweenService")
+	local dotCount = 0
+	local running = true
 
-	local tweenService = game:GetService("TweenService");
-	local dotCount = 0;
-	local running = true;
-	local barTweenInfoPart1 = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out);
+	local barTweenInfoPart1 = TweenInfo.new(0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
 	local barTweenPart1 = tweenService:Create(LoadingBar, barTweenInfoPart1, {
 		Size = UDim2.new(0.25, 0, 1, 0)
-	});
-	local barTweenInfoPart2 = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out);
+	})
+	local barTweenInfoPart2 = TweenInfo.new(1, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
 	local barTweenPart2 = tweenService:Create(LoadingBar, barTweenInfoPart2, {
 		Size = UDim2.new(1, 0, 1, 0)
-	});
-	barTweenPart1:Play();
+	})
+	barTweenPart1:Play()
 
 	function Update:Loaded()
-		barTweenPart2:Play();
-	end;
+		barTweenPart2:Play()
+	end
 
 	barTweenPart1.Completed:Connect(function()
-		running = true;
+		running = true
 		barTweenPart2.Completed:Connect(function()
-			wait(1);
-			running = false;
-			DescriptionLoader.Text = "Loaded!";
-			wait(0.5);
-			Loader:Destroy();
-		end);
-	end);
+			wait(1)
+			running = false
+			DescriptionLoader.Text = "Loaded!"
+			wait(0.5)
+			TweenService:Create(Loader, TweenInfo.new(0.3), { BackgroundTransparency = 1 }):Play()
+			wait(0.3)
+			Loader:Destroy()
+		end)
+	end)
 
 	spawn(function()
 		while running do
-			dotCount = (dotCount + 1) % 4;
-			local dots = string.rep(".", dotCount);
-			DescriptionLoader.Text = "Please wait" .. dots;
-			wait(0.5);
-		end;
-	end);
-end;
+			dotCount = (dotCount + 1) % 4
+			local dots = string.rep(".", dotCount)
+			DescriptionLoader.Text = "Please wait" .. dots
+			wait(0.5)
+		end
+	end)
+end
 
+-- 4. --- 设置加载/保存 (逻辑不变) ---
 local SettingsLib = {
 	SaveSettings = true,
 	LoadAnimation = true
-};
-
-(getgenv()).LoadConfig = function()
+}
+;(getgenv()).LoadConfig = function()
 	if readfile and writefile and isfile and isfolder then
 		if not isfolder("STELLAR") then
-			makefolder("STELLAR");
-		end;
+			makefolder("STELLAR")
+		end
 		if not isfolder("STELLAR/Library/") then
-			makefolder("STELLAR/Library/");
-		end;
+			makefolder("STELLAR/Library/")
+		end
 		if not isfile(("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
-			writefile("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(SettingsLib));
+			writefile("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(SettingsLib))
 		else
-			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
+			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json"))
 			for i, v in pairs(Decode) do
-				SettingsLib[i] = v;
-			end;
-		end;
-		print("Library Loaded!");
+				SettingsLib[i] = v
+			end
+		end
+		print("Library Loaded!")
 	else
-		return warn("Status : Undetected Executor");
-	end;
-end;
-
-(getgenv()).SaveConfig = function()
+		return warn("Status : Undetected Executor")
+	end
+end
+;(getgenv()).SaveConfig = function()
 	if readfile and writefile and isfile and isfolder then
 		if not isfile(("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
-			(getgenv()).Load();
+			(getgenv()).Load()
 		else
-			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
-			local Array = {};
+			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json"))
+			local Array = {}
 			for i, v in pairs(SettingsLib) do
-				Array[i] = v;
-			end;
-			writefile("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(Array));
-		end;
+				Array[i] = v
+			end
+			writefile("STELLAR/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(Array))
+		end
 	else
-		return warn("Status : Undetected Executor");
-	end;
-end;
-
-(getgenv()).LoadConfig();
+		return warn("Status : Undetected Executor")
+	end
+end
+;(getgenv()).LoadConfig()
 
 function Update:SaveSettings()
 	if SettingsLib.SaveSettings then
-		return true;
-	end;
-	return false;
-end;
+		return true
+	end
+	return false
+end
 
 function Update:LoadAnimation()
 	if SettingsLib.LoadAnimation then
-		return true;
-	end;
-	return false;
-end;
+		return true
+	end
+	return false
+end
 
+-- 5. --- 创意元素: 动态背景 ---
+function CreateDynamicBackground(parent)
+	local bgFrame = Instance.new("Frame", parent)
+	bgFrame.Name = "DynamicBackground"
+	bgFrame.Size = UDim2.new(2, 0, 2, 0) -- 放大2倍用于旋转
+	bgFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	bgFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	bgFrame.BackgroundTransparency = 1
+	bgFrame.ZIndex = 0
+
+	local gradient = Instance.new("UIGradient", bgFrame)
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, _G.NeonPink),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(102, 0, 255)), -- 添加紫色
+		ColorSequenceKeypoint.new(1, _G.NeonPink)
+	})
+	gradient.Rotation = -90
+
+	-- 缓慢旋转动画
+	RunService.Heartbeat:Connect(function()
+		if parent:IsDescendantOf(game.CoreGui) then
+			gradient.Rotation = (gradient.Rotation + 0.1) % 360
+		end
+	end)
+
+	local bgBlur = Instance.new("Frame", parent)
+	bgBlur.Name = "BackgroundBlur"
+	bgBlur.Size = UDim2.new(1, 0, 1, 0)
+	bgBlur.BackgroundColor3 = _G.DarkGlass
+	bgBlur.BackgroundTransparency = 0.2 -- 玻璃模糊层
+	bgBlur.ZIndex = 1
+	Instance.new("UIBlur", bgBlur).Size = 24 -- 高斯模糊
+end
+
+
+-- 6. --- 主窗口 (核心重构) ---
 function Update:Window(Config)
-	assert(Config.SubTitle, "v4");
+	assert(Config.SubTitle, "v4")
 	local WindowConfig = {
 		Size = Config.Size,
 		TabWidth = Config.TabWidth
-	};
+	}
+	local osfunc = {}
+	local uihide = false
+	local abc = false
+	local currentpage = ""
+	local keybind = keybind or Enum.KeyCode.RightControl
+	local yoo = string.gsub(tostring(keybind), "Enum.KeyCode.", "")
+
+	local STELLAR = Instance.new("ScreenGui")
+	STELLAR.Name = "STELLAR"
+	STELLAR.Parent = game.CoreGui
+	STELLAR.DisplayOrder = 999
+
+	-- 动态背景层
+	local BackgroundContainer = Instance.new("Frame", STELLAR)
+	BackgroundContainer.Name = "BackgroundContainer"
+	BackgroundContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+	BackgroundContainer.Position = UDim2.new(0.5, 0, 0.45, 0)
+	BackgroundContainer.Size = WindowConfig.Size
+	BackgroundContainer.ClipsDescendants = true
+	BackgroundContainer.BackgroundTransparency = 1
+	CreateRounded(BackgroundContainer, 15)
+
+	-- 创意元素: 添加动态背景
+	CreateDynamicBackground(BackgroundContainer)
+
+	-- 主框架 (玻璃层)
+	local OutlineMain = Instance.new("Frame")
+	OutlineMain.Name = "OutlineMain"
+	OutlineMain.Parent = BackgroundContainer
+	OutlineMain.ClipsDescendants = true
+	OutlineMain.AnchorPoint = Vector2.new(0.5, 0.5)
+	OutlineMain.BackgroundColor3 = _G.DarkGlass
+	OutlineMain.BackgroundTransparency = 1 -- 透明, 让 BackgroundBlur 生效
+	OutlineMain.Position = UDim2.new(0.5, 0, 0.5, 0)
+	OutlineMain.Size = UDim2.new(1, 0, 1, 0)
+	OutlineMain.ZIndex = 2
+	CreateRounded(OutlineMain, 15)
+	CreateGlassBorder(OutlineMain) -- 玻璃边缘
+
+	-- 内容容器
+	local Main = Instance.new("Frame")
+	Main.Name = "Main"
+	Main.Parent = OutlineMain
+	Main.ClipsDescendants = true
+	Main.AnchorPoint = Vector2.new(0.5, 0.5)
+	Main.BackgroundColor3 = Color3.fromRGB(24, 24, 26)
+	Main.BackgroundTransparency = 1 -- 完全透明
+	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+	Main.Size = UDim2.new(1, 0, 1, 0)
+	CreateRounded(Main, 12)
+
+	-- 窗口加载动画
+	BackgroundContainer:TweenSize(WindowConfig.Size, "Out", "Quad", 0.4, true)
+
+	-- 拖动按钮 (右下角)
+	local DragButton = Instance.new("Frame")
+	DragButton.Name = "DragButton"
+	DragButton.Parent = Main
+	DragButton.Position = UDim2.new(1, 5, 1, 5)
+	DragButton.AnchorPoint = Vector2.new(1, 1)
+	DragButton.Size = UDim2.new(0, 15, 0, 15)
+	DragButton.BackgroundColor3 = _G.NeonPink
+	DragButton.BackgroundTransparency = 0.5
+	DragButton.ZIndex = 10
+	CreateRounded(DragButton, 99)
+
+	-- 顶部栏
+	local Top = Instance.new("Frame")
+	Top.Name = "Top"
+	Top.Parent = Main
+	Top.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+	Top.Size = UDim2.new(1, 0, 0, 40)
+	Top.BackgroundTransparency = 1 -- 透明
 	
-	local osfunc = {};
-	local uihide = false;
-	local abc = false;
-	local currentpage = "";
-	local keybind = keybind or Enum.KeyCode.RightControl;
-	local yoo = string.gsub(tostring(keybind), "Enum.KeyCode.", "");
-	
-	local STELLAR = Instance.new("ScreenGui");
-	STELLAR.Name = "STELLAR";
-	STELLAR.Parent = game.CoreGui;
-	STELLAR.DisplayOrder = 999;
+	local NameHub = Instance.new("TextLabel")
+	NameHub.Name = "NameHub"
+	NameHub.Parent = Top
+	NameHub.BackgroundTransparency = 1
+	NameHub.RichText = true
+	NameHub.Position = UDim2.new(0, 15, 0.5, 0)
+	NameHub.AnchorPoint = Vector2.new(0, 0.5)
+	NameHub.Size = UDim2.new(0, 1, 0, 25)
+	NameHub.Font = Enum.Font.GothamBold
+	NameHub.Text = "STELLAR"
+	NameHub.TextSize = 20
+	NameHub.TextColor3 = _G.LightText
+	NameHub.TextXAlignment = Enum.TextXAlignment.Left
+	local nameHubSize = (game:GetService("TextService")):GetTextSize(NameHub.Text, NameHub.TextSize, NameHub.Font, Vector2.new(math.huge, math.huge))
+	NameHub.Size = UDim2.new(0, nameHubSize.X, 0, 25)
 
-	-- 主窗口轮廓 - 透明设计
-	local OutlineMain = Instance.new("Frame");
-	OutlineMain.Name = "OutlineMain";
-	OutlineMain.Parent = STELLAR;
-	OutlineMain.ClipsDescendants = true;
-	OutlineMain.AnchorPoint = Vector2.new(0.5, 0.5);
-	OutlineMain.BackgroundColor3 = _G.Dark;
-	OutlineMain.BackgroundTransparency = 0.3;
-	OutlineMain.Position = UDim2.new(0.5, 0, 0.45, 0);
-	OutlineMain.Size = UDim2.new(0, 0, 0, 0);
-	CreateRounded(OutlineMain, 20);
-	
-	-- 添加发光效果
-	CreateGlowEffect(OutlineMain)
+	local SubTitle = Instance.new("TextLabel")
+	SubTitle.Name = "SubTitle"
+	SubTitle.Parent = NameHub
+	SubTitle.BackgroundTransparency = 1
+	SubTitle.Position = UDim2.new(0, nameHubSize.X + 8, 0.5, 0)
+	SubTitle.Size = UDim2.new(0, 1, 0, 20)
+	SubTitle.Font = Enum.Font.Gotham
+	SubTitle.AnchorPoint = Vector2.new(0, 0.5)
+	SubTitle.Text = Config.SubTitle
+	SubTitle.TextSize = 15
+	SubTitle.TextColor3 = _G.DimText
+	SubTitle.TextTransparency = 0.3
+	local SubTitleSize = (game:GetService("TextService")):GetTextSize(SubTitle.Text, SubTitle.TextSize, SubTitle.Font, Vector2.new(math.huge, math.huge))
+	SubTitle.Size = UDim2.new(0, SubTitleSize.X, 0, 25)
 
-	-- 主窗口内容
-	local Main = Instance.new("Frame");
-	Main.Name = "Main";
-	Main.Parent = OutlineMain;
-	Main.ClipsDescendants = true;
-	Main.AnchorPoint = Vector2.new(0.5, 0.5);
-	Main.BackgroundColor3 = _G.Dark;
-	Main.BackgroundTransparency = 0.2;
-	Main.Position = UDim2.new(0.5, 0, 0.5, 0);
-	Main.Size = WindowConfig.Size;
-	
-	OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
-	CreateRounded(Main, 15);
-
-	local BtnStroke = Instance.new("UIStroke");
-	
-	local DragButton = Instance.new("Frame");
-	DragButton.Name = "DragButton";
-	DragButton.Parent = Main;
-	DragButton.Position = UDim2.new(1, 5, 1, 5);
-	DragButton.AnchorPoint = Vector2.new(1, 1);
-	DragButton.Size = UDim2.new(0, 15, 0, 15);
-	DragButton.BackgroundColor3 = _G.Primary;
-	DragButton.BackgroundTransparency = 1;
-	DragButton.ZIndex = 10;
-	
-	local mouse = game.Players.LocalPlayer:GetMouse();
-	local uis = game:GetService("UserInputService");
-	
-	local CircleDragButton = Instance.new("UICorner");
-	CircleDragButton.Name = "CircleDragButton";
-	CircleDragButton.Parent = DragButton;
-	CircleDragButton.CornerRadius = UDim.new(0, 99);
-
-	-- 顶部栏 - 透明设计
-	local Top = Instance.new("Frame");
-	Top.Name = "Top";
-	Top.Parent = Main;
-	Top.BackgroundColor3 = _G.Dark;
-	Top.Size = UDim2.new(1, 0, 0, 40);
-	Top.BackgroundTransparency = 0.3;
-	CreateRounded(Top, 12);
-
-	local NameHub = Instance.new("TextLabel");
-	NameHub.Name = "NameHub";
-	NameHub.Parent = Top;
-	NameHub.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-	NameHub.BackgroundTransparency = 1;
-	NameHub.RichText = true;
-	NameHub.Position = UDim2.new(0, 15, 0.5, 0);
-	NameHub.AnchorPoint = Vector2.new(0, 0.5);
-	NameHub.Size = UDim2.new(0, 1, 0, 25);
-	NameHub.Font = Enum.Font.GothamBold;
-	NameHub.Text = "STELLAR";
-	NameHub.TextSize = 20;
-	NameHub.TextColor3 = _G.Neon;
-	NameHub.TextXAlignment = Enum.TextXAlignment.Left;
-	
-	local nameHubSize = (game:GetService("TextService")):GetTextSize(NameHub.Text, NameHub.TextSize, NameHub.Font, Vector2.new(math.huge, math.huge));
-	NameHub.Size = UDim2.new(0, nameHubSize.X, 0, 25);
-
-	local SubTitle = Instance.new("TextLabel");
-	SubTitle.Name = "SubTitle";
-	SubTitle.Parent = NameHub;
-	SubTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-	SubTitle.BackgroundTransparency = 1;
-	SubTitle.Position = UDim2.new(0, nameHubSize.X + 8, 0.5, 0);
-	SubTitle.Size = UDim2.new(0, 1, 0, 20);
-	SubTitle.Font = Enum.Font.Cartoon;
-	SubTitle.AnchorPoint = Vector2.new(0, 0.5);
-	SubTitle.Text = Config.SubTitle;
-	SubTitle.TextSize = 15;
-	SubTitle.TextColor3 = _G.Accent;
-	
-	local SubTitleSize = (game:GetService("TextService")):GetTextSize(SubTitle.Text, SubTitle.TextSize, SubTitle.Font, Vector2.new(math.huge, math.huge));
-	SubTitle.Size = UDim2.new(0, SubTitleSize.X, 0, 25);
-
-	-- 关闭按钮 - 透明圆形
-	local CloseButton = Instance.new("ImageButton");
-	CloseButton.Name = "CloseButton";
-	CloseButton.Parent = Top;
-	CloseButton.BackgroundColor3 = _G.Primary;
-	CloseButton.BackgroundTransparency = 0.8;
-	CloseButton.AnchorPoint = Vector2.new(1, 0.5);
-	CloseButton.Position = UDim2.new(1, -15, 0.5, 0);
-	CloseButton.Size = UDim2.new(0, 25, 0, 25);
-	CloseButton.Image = "rbxassetid://7743878857";
-	CloseButton.ImageTransparency = 0;
-	CloseButton.ImageColor3 = _G.Neon;
-	CreateRounded(CloseButton, 100);
-	
-	CloseButton.MouseButton1Click:connect(function()
-		(game.CoreGui:FindFirstChild("STELLAR")).Enabled = not (game.CoreGui:FindFirstChild("STELLAR")).Enabled;
-	end);
-
-	-- 调整大小按钮
-	local ResizeButton = Instance.new("ImageButton");
-	ResizeButton.Name = "ResizeButton";
-	ResizeButton.Parent = Top;
-	ResizeButton.BackgroundColor3 = _G.Primary;
-	ResizeButton.BackgroundTransparency = 0.8;
-	ResizeButton.AnchorPoint = Vector2.new(1, 0.5);
-	ResizeButton.Position = UDim2.new(1, -50, 0.5, 0);
-	ResizeButton.Size = UDim2.new(0, 25, 0, 25);
-	ResizeButton.Image = "rbxassetid://10734886735";
-	ResizeButton.ImageTransparency = 0;
-	ResizeButton.ImageColor3 = _G.Neon;
-	CreateRounded(ResizeButton, 100);
-
-	-- 设置背景
-	local BackgroundSettings = Instance.new("Frame");
-	BackgroundSettings.Name = "BackgroundSettings";
-	BackgroundSettings.Parent = OutlineMain;
-	BackgroundSettings.ClipsDescendants = true;
-	BackgroundSettings.Active = true;
-	BackgroundSettings.AnchorPoint = Vector2.new(0, 0);
-	BackgroundSettings.BackgroundColor3 = _G.Dark;
-	BackgroundSettings.BackgroundTransparency = 0.1;
-	BackgroundSettings.Position = UDim2.new(0, 0, 0, 0);
-	BackgroundSettings.Size = UDim2.new(1, 0, 1, 0);
-	BackgroundSettings.Visible = false;
-	CreateRounded(BackgroundSettings, 20);
-
-	local SettingsFrame = Instance.new("Frame");
-	SettingsFrame.Name = "SettingsFrame";
-	SettingsFrame.Parent = BackgroundSettings;
-	SettingsFrame.ClipsDescendants = true;
-	SettingsFrame.AnchorPoint = Vector2.new(0.5, 0.5);
-	SettingsFrame.BackgroundColor3 = _G.Dark;
-	SettingsFrame.BackgroundTransparency = 0.2;
-	SettingsFrame.Position = UDim2.new(0.5, 0, 0.5, 0);
-	SettingsFrame.Size = UDim2.new(0.7, 0, 0.7, 0);
-	CreateRounded(SettingsFrame, 20);
-	
-	CreateGlowEffect(SettingsFrame)
-
-	-- 关闭设置按钮
-	local CloseSettings = Instance.new("ImageButton");
-	CloseSettings.Name = "CloseSettings";
-	CloseSettings.Parent = SettingsFrame;
-	CloseSettings.BackgroundColor3 = _G.Primary;
-	CloseSettings.BackgroundTransparency = 0.8;
-	CloseSettings.AnchorPoint = Vector2.new(1, 0);
-	CloseSettings.Position = UDim2.new(1, -20, 0, 15);
-	CloseSettings.Size = UDim2.new(0, 25, 0, 25);
-	CloseSettings.Image = "rbxassetid://10747384394";
-	CloseSettings.ImageTransparency = 0;
-	CloseSettings.ImageColor3 = _G.Neon;
-	CreateRounded(CloseSettings, 100);
-	
-	CloseSettings.MouseButton1Click:connect(function()
-		BackgroundSettings.Visible = false;
-	end);
-
-	-- 设置按钮
-	local SettingsButton = Instance.new("ImageButton");
-	SettingsButton.Name = "SettingsButton";
-	SettingsButton.Parent = Top;
-	SettingsButton.BackgroundColor3 = _G.Primary;
-	SettingsButton.BackgroundTransparency = 0.8;
-	SettingsButton.AnchorPoint = Vector2.new(1, 0.5);
-	SettingsButton.Position = UDim2.new(1, -85, 0.5, 0);
-	SettingsButton.Size = UDim2.new(0, 25, 0, 25);
-	SettingsButton.Image = "rbxassetid://10734950020";
-	SettingsButton.ImageTransparency = 0;
-	SettingsButton.ImageColor3 = _G.Neon;
-	CreateRounded(SettingsButton, 100);
-	
-	SettingsButton.MouseButton1Click:connect(function()
-		BackgroundSettings.Visible = true;
-	end);
-
-	local TitleSettings = Instance.new("TextLabel");
-	TitleSettings.Name = "TitleSettings";
-	TitleSettings.Parent = SettingsFrame;
-	TitleSettings.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-	TitleSettings.BackgroundTransparency = 1;
-	TitleSettings.Position = UDim2.new(0, 20, 0, 15);
-	TitleSettings.Size = UDim2.new(1, 0, 0, 20);
-	TitleSettings.Font = Enum.Font.GothamBold;
-	TitleSettings.AnchorPoint = Vector2.new(0, 0);
-	TitleSettings.Text = "Library Settings";
-	TitleSettings.TextSize = 20;
-	TitleSettings.TextColor3 = _G.Neon;
-	TitleSettings.TextXAlignment = Enum.TextXAlignment.Left;
-
-	local SettingsMenuList = Instance.new("Frame");
-	SettingsMenuList.Name = "SettingsMenuList";
-	SettingsMenuList.Parent = SettingsFrame;
-	SettingsMenuList.ClipsDescendants = true;
-	SettingsMenuList.AnchorPoint = Vector2.new(0, 0);
-	SettingsMenuList.BackgroundColor3 = _G.Dark;
-	SettingsMenuList.BackgroundTransparency = 1;
-	SettingsMenuList.Position = UDim2.new(0, 0, 0, 50);
-	SettingsMenuList.Size = UDim2.new(1, 0, 1, -70);
-	CreateRounded(SettingsMenuList, 15);
-
-	local ScrollSettings = Instance.new("ScrollingFrame");
-	ScrollSettings.Name = "ScrollSettings";
-	ScrollSettings.Parent = SettingsMenuList;
-	ScrollSettings.Active = true;
-	ScrollSettings.BackgroundColor3 = _G.Dark;
-	ScrollSettings.Position = UDim2.new(0, 0, 0, 0);
-	ScrollSettings.BackgroundTransparency = 1;
-	ScrollSettings.Size = UDim2.new(1, 0, 1, 0);
-	ScrollSettings.ScrollBarThickness = 3;
-	ScrollSettings.ScrollingDirection = Enum.ScrollingDirection.Y;
-	CreateRounded(SettingsMenuList, 5);
-
-	local SettingsListLayout = Instance.new("UIListLayout");
-	SettingsListLayout.Name = "SettingsListLayout";
-	SettingsListLayout.Parent = ScrollSettings;
-	SettingsListLayout.SortOrder = Enum.SortOrder.LayoutOrder;
-	SettingsListLayout.Padding = UDim.new(0, 8);
-
-	local PaddingScroll = Instance.new("UIPadding");
-	PaddingScroll.Name = "PaddingScroll";
-	PaddingScroll.Parent = ScrollSettings;
-
-	function CreateCheckbox(title, state, callback)
-		local checked = state or false;
-		local Background = Instance.new("Frame");
-		Background.Name = "Background";
-		Background.Parent = ScrollSettings;
-		Background.ClipsDescendants = true;
-		Background.BackgroundColor3 = _G.Dark;
-		Background.BackgroundTransparency = 1;
-		Background.Size = UDim2.new(1, 0, 0, 20);
-
-		local Title = Instance.new("TextLabel");
-		Title.Name = "Title";
-		Title.Parent = Background;
-		Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-		Title.BackgroundTransparency = 1;
-		Title.Position = UDim2.new(0, 60, 0.5, 0);
-		Title.Size = UDim2.new(1, -60, 0, 20);
-		Title.Font = Enum.Font.Code;
-		Title.AnchorPoint = Vector2.new(0, 0.5);
-		Title.Text = title or "";
-		Title.TextSize = 15;
-		Title.TextColor3 = _G.Accent;
-		Title.TextXAlignment = Enum.TextXAlignment.Left;
-
-		local Checkbox = Instance.new("ImageButton");
-		Checkbox.Name = "Checkbox";
-		Checkbox.Parent = Background;
-		Checkbox.BackgroundColor3 = Color3.fromRGB(100, 100, 100);
-		Checkbox.BackgroundTransparency = 0.8;
-		Checkbox.AnchorPoint = Vector2.new(0, 0.5);
-		Checkbox.Position = UDim2.new(0, 30, 0.5, 0);
-		Checkbox.Size = UDim2.new(0, 20, 0, 20);
-		Checkbox.Image = "rbxassetid://10709790644";
-		Checkbox.ImageTransparency = 1;
-		Checkbox.ImageColor3 = Color3.fromRGB(245, 245, 245);
-		CreateRounded(Checkbox, 5);
+	-- 顶部按钮 (关闭, 调整, 设置)
+	local function CreateTopButton(name, imageId, position)
+		local Button = Instance.new("ImageButton")
+		Button.Name = name
+		Button.Parent = Top
+		Button.BackgroundTransparency = 1
+		Button.AnchorPoint = Vector2.new(1, 0.5)
+		Button.Position = position
+		Button.Size = UDim2.new(0, 18, 0, 18)
+		Button.Image = imageId
+		Button.ImageTransparency = 0.3
+		Button.ImageColor3 = _G.LightText
 		
+		Button.MouseEnter:Connect(function()
+			TweenService:Create(Button, TweenInfo.new(0.2), { ImageTransparency = 0, ImageColor3 = _G.NeonPink }):Play()
+		end)
+		Button.MouseLeave:Connect(function()
+			TweenService:Create(Button, TweenInfo.new(0.2), { ImageTransparency = 0.3, ImageColor3 = _G.LightText }):Play()
+		end)
+		Button.MouseButton1Click:Connect(PlayClickSound)
+		return Button
+	end
+
+	local CloseButton = CreateTopButton("CloseButton", "rbxassetid://6031413151", UDim2.new(1, -15, 0.5, 0))
+	CloseButton.MouseButton1Click:connect(function()
+		PlayClickSound()
+		(game.CoreGui:FindFirstChild("STELLAR")).Enabled = not (game.CoreGui:FindFirstChild("STELLAR")).Enabled
+	end)
+
+	local ResizeButton = CreateTopButton("ResizeButton", "rbxassetid://10734886735", UDim2.new(1, -45, 0.5, 0))
+	local SettingsButton = CreateTopButton("SettingsButton", "rbxassetid://10734950020", UDim2.new(1, -75, 0.5, 0))
+
+	-- 设置弹窗 (玻璃态)
+	local BackgroundSettings = Instance.new("Frame")
+	BackgroundSettings.Name = "BackgroundSettings"
+	BackgroundSettings.Parent = BackgroundContainer -- 放在背景容器上
+	BackgroundSettings.ClipsDescendants = true
+	BackgroundSettings.Active = true
+	BackgroundSettings.BackgroundColor3 = _G.DarkGlass
+	BackgroundSettings.BackgroundTransparency = 0.1
+	BackgroundSettings.Position = UDim2.new(0, 0, 0, 0)
+	BackgroundSettings.Size = UDim2.new(1, 0, 1, 0)
+	BackgroundSettings.Visible = false
+	BackgroundSettings.ZIndex = 100
+	CreateRounded(BackgroundSettings, 15)
+	Instance.new("UIBlur", BackgroundSettings).Size = 24 -- 强模糊
+
+	local SettingsFrame = Instance.new("Frame")
+	SettingsFrame.Name = "SettingsFrame"
+	SettingsFrame.Parent = BackgroundSettings
+	SettingsFrame.ClipsDescendants = true
+	SettingsFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	SettingsFrame.BackgroundColor3 = _G.DarkGlass
+	SettingsFrame.BackgroundTransparency = 1 -- 透明
+	SettingsFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	SettingsFrame.Size = UDim2.new(0.7, 0, 0.7, 0)
+	CreateRounded(SettingsFrame, 15)
+	CreateGlassBorder(SettingsFrame)
+
+	local CloseSettings = CreateTopButton("CloseSettings", "rbxassetid://6031413151", UDim2.new(1, -15, 0, 15))
+	CloseSettings.Position = UDim2.new(1, -20, 0, 15)
+	CloseSettings.AnchorPoint = Vector2.new(1, 0)
+	CloseSettings.Size = UDim2.new(0, 18, 0, 18)
+	CloseSettings.Parent = SettingsFrame
+	CloseSettings.MouseButton1Click:connect(function()
+		PlayClickSound()
+		BackgroundSettings.Visible = false
+	end)
+
+	SettingsButton.MouseButton1Click:connect(function()
+		PlayClickSound()
+		BackgroundSettings.Visible = true
+	end)
+
+	local TitleSettings = Instance.new("TextLabel")
+	TitleSettings.Name = "TitleSettings"
+	TitleSettings.Parent = SettingsFrame
+	TitleSettings.BackgroundTransparency = 1
+	TitleSettings.Position = UDim2.new(0, 20, 0, 15)
+	TitleSettings.Size = UDim2.new(1, 0, 0, 20)
+	TitleSettings.Font = Enum.Font.GothamBold
+	TitleSettings.Text = "Library Settings"
+	TitleSettings.TextSize = 20
+	TitleSettings.TextColor3 = _G.LightText
+	TitleSettings.TextXAlignment = Enum.TextXAlignment.Left
+
+	local SettingsMenuList = Instance.new("Frame")
+	SettingsMenuList.Name = "SettingsMenuList"
+	SettingsMenuList.Parent = SettingsFrame
+	SettingsMenuList.ClipsDescendants = true
+	SettingsMenuList.BackgroundTransparency = 1
+	SettingsMenuList.Position = UDim2.new(0, 0, 0, 50)
+	SettingsMenuList.Size = UDim2.new(1, 0, 1, -70)
+
+	local ScrollSettings = Instance.new("ScrollingFrame")
+	ScrollSettings.Name = "ScrollSettings"
+	ScrollSettings.Parent = SettingsMenuList
+	ScrollSettings.Active = true
+	ScrollSettings.BackgroundTransparency = 1
+	ScrollSettings.Size = UDim2.new(1, 0, 1, 0)
+	ScrollSettings.ScrollBarThickness = 3
+	ScrollSettings.ScrollBarImageColor3 = _G.NeonPink
+	ScrollSettings.ScrollingDirection = Enum.ScrollingDirection.Y
+
+	local SettingsListLayout = Instance.new("UIListLayout")
+	SettingsListLayout.Name = "SettingsListLayout"
+	SettingsListLayout.Parent = ScrollSettings
+	SettingsListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	SettingsListLayout.Padding = UDim.new(0, 8)
+	
+	Instance.new("UIPadding", ScrollSettings).Padding = UDim.new(0, 15, 0, 15)
+
+	-- 设置: 复选框 (重构)
+	function CreateCheckbox(title, state, callback)
+		local checked = state or false
+		local Background = Instance.new("Frame")
+		Background.Name = "Background"
+		Background.Parent = ScrollSettings
+		Background.ClipsDescendants = true
+		Background.BackgroundColor3 = _G.Highlight
+		Background.BackgroundTransparency = 1
+		Background.Size = UDim2.new(1, 0, 0, 30)
+		CreateRounded(Background, 8)
+		
+		local Title = Instance.new("TextLabel")
+		Title.Name = "Title"
+		Title.Parent = Background
+		Title.BackgroundTransparency = 1
+		Title.Position = UDim2.new(0, 40, 0.5, 0)
+		Title.Size = UDim2.new(1, -50, 0, 30)
+		Title.Font = Enum.Font.GothamSemibold
+		Title.AnchorPoint = Vector2.new(0, 0.5)
+		Title.Text = title or ""
+		Title.TextSize = 15
+		Title.TextColor3 = _G.DimText
+		Title.TextXAlignment = Enum.TextXAlignment.Left
+
+		local Checkbox = Instance.new("ImageButton")
+		Checkbox.Name = "Checkbox"
+		Checkbox.Parent = Background
+		Checkbox.BackgroundColor3 = _G.Highlight
+		Checkbox.BackgroundTransparency = 0
+		Checkbox.AnchorPoint = Vector2.new(0, 0.5)
+		Checkbox.Position = UDim2.new(0, 10, 0.5, 0)
+		Checkbox.Size = UDim2.new(0, 20, 0, 20)
+		Checkbox.Image = "rbxassetid://3926305904" -- 检查标记
+		Checkbox.ImageTransparency = 1
+		Checkbox.ImageColor3 = _G.LightText
+		CreateRounded(Checkbox, 5)
+		CreateGlassBorder(Checkbox)
+
 		Checkbox.MouseButton1Click:Connect(function()
-			checked = not checked;
+			PlayClickSound()
+			checked = not checked
 			if checked then
-				Checkbox.ImageTransparency = 0;
-				Checkbox.BackgroundColor3 = _G.Neon;
+				TweenService:Create(Checkbox, TweenInfo.new(0.2), { ImageTransparency = 0, BackgroundColor3 = _G.NeonPink }):Play()
 			else
-				Checkbox.ImageTransparency = 1;
-				Checkbox.BackgroundColor3 = Color3.fromRGB(100, 100, 100);
-			end;
-			pcall(callback, checked);
-		end);
+				TweenService:Create(Checkbox, TweenInfo.new(0.2), { ImageTransparency = 1, BackgroundColor3 = _G.Highlight }):Play()
+			end
+			pcall(callback, checked)
+		end)
 
 		if checked then
-			Checkbox.ImageTransparency = 0;
-			Checkbox.BackgroundColor3 = _G.Neon;
-		else
-			Checkbox.ImageTransparency = 1;
-			Checkbox.BackgroundColor3 = Color3.fromRGB(100, 100, 100);
-		end;
-		pcall(callback, checked);
-	end;
+			Checkbox.ImageTransparency = 0
+			Checkbox.BackgroundColor3 = _G.NeonPink
+		end
+		pcall(callback, checked)
+		
+		Background.MouseEnter:Connect(function() TweenService:Create(Background, TweenInfo.new(0.2), { BackgroundTransparency = 0.5 }):Play() end)
+		Background.MouseLeave:Connect(function() TweenService:Create(Background, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play() end)
+	end
 
+	-- 设置: 按钮 (重构)
 	function CreateButton(title, callback)
-		local Background = Instance.new("Frame");
-		Background.Name = "Background";
-		Background.Parent = ScrollSettings;
-		Background.ClipsDescendants = true;
-		Background.BackgroundColor3 = _G.Dark;
-		Background.BackgroundTransparency = 1;
-		Background.Size = UDim2.new(1, 0, 0, 30);
+		local Background = Instance.new("Frame")
+		Background.Name = "Background"
+		Background.Parent = ScrollSettings
+		Background.ClipsDescendants = true
+		Background.BackgroundColor3 = _G.Highlight
+		Background.BackgroundTransparency = 1
+		Background.Size = UDim2.new(1, 0, 0, 35)
 
-		local Button = Instance.new("TextButton");
-		Button.Name = "Button";
-		Button.Parent = Background;
-		Button.BackgroundColor3 = _G.Neon;
-		Button.BackgroundTransparency = 0.8;
-		Button.Size = UDim2.new(0.8, 0, 0, 30);
-		Button.Font = Enum.Font.Code;
-		Button.Text = title or "Button";
-		Button.AnchorPoint = Vector2.new(0.5, 0);
-		Button.Position = UDim2.new(0.5, 0, 0, 0);
-		Button.TextColor3 = Color3.fromRGB(255, 255, 255);
-		Button.TextSize = 15;
-		Button.AutoButtonColor = false;
-		
+		local Button = Instance.new("TextButton")
+		Button.Name = "Button"
+		Button.Parent = Background
+		Button.BackgroundColor3 = _G.NeonPink
+		Button.BackgroundTransparency = 0
+		Button.Size = UDim2.new(1, 0, 1, 0)
+		Button.Font = Enum.Font.GothamBold
+		Button.Text = title or "Button"
+		Button.AnchorPoint = Vector2.new(0.5, 0.5)
+		Button.Position = UDim2.new(0.5, 0, 0.5, 0)
+		Button.TextColor3 = _G.LightText
+		Button.TextSize = 15
+		Button.AutoButtonColor = false
+		CreateRounded(Button, 8)
+		CreateNeonGlow(Button, _G.NeonPink, 4)
+
 		Button.MouseButton1Click:Connect(function()
-			callback();
-		end);
-		
-		CreateRounded(Button, 8);
-	end;
+			PlayClickSound()
+			callback()
+		end)
+
+		Button.MouseEnter:Connect(function() TweenService:Create(Button, TweenInfo.new(0.2), { BackgroundTransparency = 0.3 }):Play() end)
+		Button.MouseLeave:Connect(function() TweenService:Create(Button, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play() end)
+	end
 
 	CreateCheckbox("Save Settings", SettingsLib.SaveSettings, function(state)
-		SettingsLib.SaveSettings = state;
-		(getgenv()).SaveConfig();
-	end);
-
+		SettingsLib.SaveSettings = state
+		;(getgenv()).SaveConfig()
+	end)
 	CreateCheckbox("Loading Animation", SettingsLib.LoadAnimation, function(state)
-		SettingsLib.LoadAnimation = state;
-		(getgenv()).SaveConfig();
-	end);
-
+		SettingsLib.LoadAnimation = state
+		;(getgenv()).SaveConfig()
+	end)
 	CreateButton("Reset Config", function()
 		if isfolder("STELLAR") then
-			delfolder("STELLAR");
-		end;
-		Update:Notify("Config has been reseted!");
-	end);
+			delfolder("STELLAR")
+		end
+		Update:Notify("Config has been reseted!")
+	end)
 
-	-- 标签页 - 透明设计
-	local Tab = Instance.new("Frame");
-	Tab.Name = "Tab";
-	Tab.Parent = Main;
-	Tab.BackgroundColor3 = _G.Dark;
-	Tab.Position = UDim2.new(0, 8, 0, Top.Size.Y.Offset);
-	Tab.BackgroundTransparency = 0.3;
-	Tab.Size = UDim2.new(0, WindowConfig.TabWidth, Config.Size.Y.Scale, Config.Size.Y.Offset - Top.Size.Y.Offset - 8);
+	-- 左侧标签页栏
+	local Tab = Instance.new("Frame")
+	Tab.Name = "Tab"
+	Tab.Parent = Main
+	Tab.BackgroundColor3 = _G.Highlight
+	Tab.Position = UDim2.new(0, 8, 0, Top.Size.Y.Offset + 8)
+	Tab.BackgroundTransparency = 1 -- 透明
+	Tab.Size = UDim2.new(0, WindowConfig.TabWidth, Config.Size.Y.Scale, Config.Size.Y.Offset - Top.Size.Y.Offset - 16)
 	
-	local BtnStroke = Instance.new("UIStroke");
+	local ScrollTab = Instance.new("ScrollingFrame")
+	ScrollTab.Name = "ScrollTab"
+	ScrollTab.Parent = Tab
+	ScrollTab.Active = true
+	ScrollTab.BackgroundTransparency = 1
+	ScrollTab.Size = UDim2.new(1, 0, 1, 0)
+	ScrollTab.ScrollBarThickness = 0
+	ScrollTab.ScrollingDirection = Enum.ScrollingDirection.Y
+	CreateRounded(Tab, 5)
 
-	local ScrollTab = Instance.new("ScrollingFrame");
-	ScrollTab.Name = "ScrollTab";
-	ScrollTab.Parent = Tab;
-	ScrollTab.Active = true;
-	ScrollTab.BackgroundColor3 = _G.Dark;
-	ScrollTab.Position = UDim2.new(0, 0, 0, 0);
-	ScrollTab.BackgroundTransparency = 1;
-	ScrollTab.Size = UDim2.new(1, 0, 1, 0);
-	ScrollTab.ScrollBarThickness = 0;
-	ScrollTab.ScrollingDirection = Enum.ScrollingDirection.Y;
-	CreateRounded(Tab, 10);
+	local TabListLayout = Instance.new("UIListLayout")
+	TabListLayout.Name = "TabListLayout"
+	TabListLayout.Parent = ScrollTab
+	TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	TabListLayout.Padding = UDim.new(0, 4) -- 标签间距
 
-	local TabListLayout = Instance.new("UIListLayout");
-	TabListLayout.Name = "TabListLayout";
-	TabListLayout.Parent = ScrollTab;
-	TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder;
-	TabListLayout.Padding = UDim.new(0, 2);
+	-- 右侧内容页
+	local Page = Instance.new("Frame")
+	Page.Name = "Page"
+	Page.Parent = Main
+	Page.BackgroundColor3 = _G.Highlight
+	Page.Position = UDim2.new(0, Tab.Size.X.Offset + 18, 0, Top.Size.Y.Offset + 8)
+	Page.Size = UDim2.new(Config.Size.X.Scale, Config.Size.X.Offset - Tab.Size.X.Offset - 26, Config.Size.Y.Scale, Config.Size.Y.Offset - Top.Size.Y.Offset - 16)
+	Page.BackgroundTransparency = 0.8 -- 内容区域半透明
+	CreateRounded(Page, 8)
+	CreateGlassBorder(Page)
 
-	local PPD = Instance.new("UIPadding");
-	PPD.Name = "PPD";
-	PPD.Parent = ScrollTab;
+	local MainPage = Instance.new("Frame")
+	MainPage.Name = "MainPage"
+	MainPage.Parent = Page
+	MainPage.ClipsDescendants = true
+	MainPage.BackgroundTransparency = 1
+	MainPage.Size = UDim2.new(1, 0, 1, 0)
 
-	-- 页面区域 - 透明设计
-	local Page = Instance.new("Frame");
-	Page.Name = "Page";
-	Page.Parent = Main;
-	Page.BackgroundColor3 = _G.Dark;
-	Page.Position = UDim2.new(0, Tab.Size.X.Offset + 18, 0, Top.Size.Y.Offset);
-	Page.Size = UDim2.new(Config.Size.X.Scale, Config.Size.X.Offset - Tab.Size.X.Offset - 25, Config.Size.Y.Scale, Config.Size.Y.Offset - Top.Size.Y.Offset - 8);
-	Page.BackgroundTransparency = 0.3;
-	CreateRounded(Page, 12);
+	local PageList = Instance.new("Folder")
+	PageList.Name = "PageList"
+	PageList.Parent = MainPage
 
-	local MainPage = Instance.new("Frame");
-	MainPage.Name = "MainPage";
-	MainPage.Parent = Page;
-	MainPage.ClipsDescendants = true;
-	MainPage.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-	MainPage.BackgroundTransparency = 1;
-	MainPage.Size = UDim2.new(1, 0, 1, 0);
+	local UIPageLayout = Instance.new("UIPageLayout")
+	UIPageLayout.Parent = PageList
+	UIPageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	UIPageLayout.EasingDirection = Enum.EasingDirection.Out
+	UIPageLayout.EasingStyle = Enum.EasingStyle.Cubic -- 更平滑
+	UIPageLayout.FillDirection = Enum.FillDirection.Vertical
+	UIPageLayout.Padding = UDim.new(0, 10)
+	UIPageLayout.TweenTime = 0.3 -- 切换动画
+	UIPageLayout.GamepadInputEnabled = false
+	UIPageLayout.ScrollWheelInputEnabled = false
+	UIPageLayout.TouchInputEnabled = false
 
-	local PageList = Instance.new("Folder");
-	PageList.Name = "PageList";
-	PageList.Parent = MainPage;
-
-	local UIPageLayout = Instance.new("UIPageLayout");
-	UIPageLayout.Parent = PageList;
-	UIPageLayout.SortOrder = Enum.SortOrder.LayoutOrder;
-	UIPageLayout.EasingDirection = Enum.EasingDirection.InOut;
-	UIPageLayout.EasingStyle = Enum.EasingStyle.Quad;
-	UIPageLayout.FillDirection = Enum.FillDirection.Vertical;
-	UIPageLayout.Padding = UDim.new(0, 10);
-	UIPageLayout.TweenTime = 0;
-	UIPageLayout.GamepadInputEnabled = false;
-	UIPageLayout.ScrollWheelInputEnabled = false;
-	UIPageLayout.TouchInputEnabled = false;
-
-	MakeDraggable(Top, OutlineMain);
+	MakeDraggable(Top, BackgroundContainer) -- 拖动整个背景容器
 
 	UserInputService.InputBegan:Connect(function(input)
 		if input.KeyCode == Enum.KeyCode.Insert then
-			(game.CoreGui:FindFirstChild("STELLAR")).Enabled = not (game.CoreGui:FindFirstChild("STELLAR")).Enabled;
-		end;
-	end);
+			(game.CoreGui:FindFirstChild("STELLAR")).Enabled = not (game.CoreGui:FindFirstChild("STELLAR")).Enabled
+		end
+	end)
 
-	local Dragging = false;
+	-- 窗口缩放逻辑
+	local Dragging = false
 	DragButton.InputBegan:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-			Dragging = true;
-		end;
-	end);
-
+			Dragging = true
+		end
+	end)
 	UserInputService.InputEnded:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-			Dragging = false;
-		end;
-	end);
-
+			Dragging = false
+		end
+	end)
 	UserInputService.InputChanged:Connect(function(Input)
 		if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
-			OutlineMain.Size = UDim2.new(0, math.clamp(Input.Position.X - Main.AbsolutePosition.X + 15, WindowConfig.Size.X.Offset + 15, math.huge), 0, math.clamp(Input.Position.Y - Main.AbsolutePosition.Y + 15, WindowConfig.Size.Y.Offset + 15, math.huge));
-			Main.Size = UDim2.new(0, math.clamp(Input.Position.X - Main.AbsolutePosition.X, WindowConfig.Size.X.Offset, math.huge), 0, math.clamp(Input.Position.Y - Main.AbsolutePosition.Y, WindowConfig.Size.Y.Offset, math.huge));
-			Page.Size = UDim2.new(0, math.clamp(Input.Position.X - Page.AbsolutePosition.X - 8, WindowConfig.Size.X.Offset - Tab.Size.X.Offset - 25, math.huge), 0, math.clamp(Input.Position.Y - Page.AbsolutePosition.Y - 8, WindowConfig.Size.Y.Offset - Top.Size.Y.Offset - 10, math.huge));
-			Tab.Size = UDim2.new(0, WindowConfig.TabWidth, 0, math.clamp(Input.Position.Y - Tab.AbsolutePosition.Y - 8, WindowConfig.Size.Y.Offset - Top.Size.Y.Offset - 10, math.huge));
-		end;
-	end);
+			local newSizeX = math.clamp(Input.Position.X - BackgroundContainer.AbsolutePosition.X, WindowConfig.Size.X.Offset, math.huge)
+			local newSizeY = math.clamp(Input.Position.Y - BackgroundContainer.AbsolutePosition.Y, WindowConfig.Size.Y.Offset, math.huge)
+			
+			BackgroundContainer.Size = UDim2.new(0, newSizeX, 0, newSizeY)
+			Page.Size = UDim2.new(0, math.clamp(newSizeX - Tab.AbsoluteSize.X - 26, 100, math.huge), 0, math.clamp(newSizeY - Top.AbsoluteSize.Y - 16, 100, math.huge))
+			Tab.Size = UDim2.new(0, WindowConfig.TabWidth, 0, math.clamp(newSizeY - Top.AbsoluteSize.Y - 16, 100, math.huge))
+		end
+	end)
 
-	local uitab = {};
-
+	-- 标签页: 创建 (重构)
+	local uitab = {}
 	function uitab:Tab(text, img)
-		local BtnStroke = Instance.new("UIStroke");
-		local TabButton = Instance.new("TextButton");
-		local title = Instance.new("TextLabel");
-		local TUICorner = Instance.new("UICorner");
-		local UICorner = Instance.new("UICorner");
-		local Title = Instance.new("TextLabel");
+		local TabButton = Instance.new("TextButton")
+		TabButton.Name = text .. "Unique"
+		TabButton.Parent = ScrollTab
+		TabButton.Text = ""
+		TabButton.BackgroundColor3 = _G.Highlight
+		TabButton.BackgroundTransparency = 1 -- 默认透明
+		TabButton.Size = UDim2.new(1, 0, 0, 40)
+		TabButton.AutoButtonColor = false
+		CreateRounded(TabButton, 8)
+
+		-- 选中指示器 (霓虹)
+		local SelectedTab = Instance.new("Frame")
+		SelectedTab.Name = "SelectedTab"
+		SelectedTab.Parent = TabButton
+		SelectedTab.BackgroundColor3 = _G.NeonPink
+		SelectedTab.BackgroundTransparency = 0
+		SelectedTab.Size = UDim2.new(0, 3, 0, 0) -- 默认隐藏
+		SelectedTab.Position = UDim2.new(0, 0, 0.5, 0)
+		SelectedTab.AnchorPoint = Vector2.new(0, 0.5)
+		CreateRounded(SelectedTab, 3)
+		CreateNeonGlow(SelectedTab, _G.NeonPink, 3) -- 辉光
+
+		-- 标题
+		local Title = Instance.new("TextLabel")
+		Title.Name = "Title"
+		Title.Parent = TabButton
+		Title.BackgroundTransparency = 1
+		Title.Position = UDim2.new(0, 38, 0.5, 0)
+		Title.Size = UDim2.new(1, -45, 0, 30)
+		Title.Font = Enum.Font.GothamSemibold
+		Title.Text = text
+		Title.AnchorPoint = Vector2.new(0, 0.5)
+		Title.TextColor3 = _G.DimText
+		Title.TextTransparency = 0
+		Title.TextSize = 15
+		Title.TextXAlignment = Enum.TextXAlignment.Left
+
+		-- 图标
+		local Icon = Instance.new("ImageLabel")
+		Icon.Name = "Icon"
+		Icon.Parent = TabButton
+		Icon.BackgroundTransparency = 1
+		Icon.ImageTransparency = 0
+		Icon.Position = UDim2.new(0, 15, 0.5, 0)
+		Icon.Size = UDim2.new(0, 18, 0, 18)
+		Icon.AnchorPoint = Vector2.new(0.5, 0.5)
+		Icon.Image = img
+		Icon.ImageColor3 = _G.DimText
+
+		CreateRounded(TabButton, 6)
 		
-		TabButton.Parent = ScrollTab;
-		TabButton.Name = text .. "Unique";
-		TabButton.Text = "";
-		TabButton.BackgroundColor3 = _G.Primary;
-		TabButton.BackgroundTransparency = 0.9;
-		TabButton.Size = UDim2.new(1, 0, 0, 40);
-		TabButton.Font = Enum.Font.Nunito;
-		TabButton.TextColor3 = Color3.fromRGB(255, 255, 255);
-		TabButton.TextSize = 12;
-		TabButton.TextTransparency = 0.9;
-		CreateRounded(TabButton, 8);
+		-- 对应的内容页面
+		local MainFramePage = Instance.new("ScrollingFrame")
+		MainFramePage.Name = text .. "_Page"
+		MainFramePage.Parent = PageList
+		MainFramePage.Active = true
+		MainFramePage.BackgroundTransparency = 1
+		MainFramePage.Size = UDim2.new(1, 0, 1, 0)
+		MainFramePage.ScrollBarThickness = 3
+		MainFramePage.ScrollBarImageColor3 = _G.NeonPink
+		MainFramePage.ScrollingDirection = Enum.ScrollingDirection.Y
+		
+		local UIPadding = Instance.new("UIPadding")
+		UIPadding.Parent = MainFramePage
+		UIPadding.PaddingLeft = UDim.new(0, 10)
+		UIPadding.PaddingRight = UDim.new(0, 10)
+		UIPadding.PaddingTop = UDim.new(0, 10)
+		UIPadding.PaddingBottom = UDim.new(0, 10)
 
-		local SelectedTab = Instance.new("Frame");
-		SelectedTab.Name = "SelectedTab";
-		SelectedTab.Parent = TabButton;
-		SelectedTab.BackgroundColor3 = _G.Neon;
-		SelectedTab.BackgroundTransparency = 0;
-		SelectedTab.Size = UDim2.new(0, 3, 0, 0);
-		SelectedTab.Position = UDim2.new(0, 0, 0.5, 0);
-		SelectedTab.AnchorPoint = Vector2.new(0, 0.5);
-		UICorner.CornerRadius = UDim.new(0, 100);
-		UICorner.Parent = SelectedTab;
-
-		Title.Parent = TabButton;
-		Title.Name = "Title";
-		Title.BackgroundColor3 = Color3.fromRGB(150, 150, 150);
-		Title.BackgroundTransparency = 1;
-		Title.Position = UDim2.new(0, 30, 0.5, 0);
-		Title.Size = UDim2.new(0, 100, 0, 30);
-		Title.Font = Enum.Font.Roboto;
-		Title.Text = text;
-		Title.AnchorPoint = Vector2.new(0, 0.5);
-		Title.TextColor3 = _G.Accent;
-		Title.TextTransparency = 0.4;
-		Title.TextSize = 14;
-		Title.TextXAlignment = Enum.TextXAlignment.Left;
-
-		local IDK = Instance.new("ImageLabel");
-		IDK.Name = "IDK";
-		IDK.Parent = TabButton;
-		IDK.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-		IDK.BackgroundTransparency = 1;
-		IDK.ImageTransparency = 0.3;
-		IDK.Position = UDim2.new(0, 7, 0.5, 0);
-		IDK.Size = UDim2.new(0, 20, 0, 20);
-		IDK.AnchorPoint = Vector2.new(0, 0.5);
-		IDK.Image = img;
-		IDK.ImageColor3 = _G.Accent;
-
-		local MainFramePage = Instance.new("ScrollingFrame");
-		MainFramePage.Name = text .. "_Page";
-		MainFramePage.Parent = PageList;
-		MainFramePage.Active = true;
-		MainFramePage.BackgroundColor3 = _G.Dark;
-		MainFramePage.Position = UDim2.new(0, 0, 0, 0);
-		MainFramePage.BackgroundTransparency = 1;
-		MainFramePage.Size = UDim2.new(1, 0, 1, 0);
-		MainFramePage.ScrollBarThickness = 0;
-		MainFramePage.ScrollingDirection = Enum.ScrollingDirection.Y;
-
-		local zzzR = Instance.new("UICorner");
-		zzzR.Parent = MainPage;
-		zzzR.CornerRadius = UDim.new(0, 5);
-
-		local UIPadding = Instance.new("UIPadding");
-		local UIListLayout = Instance.new("UIListLayout");
-		UIPadding.Parent = MainFramePage;
-		UIListLayout.Padding = UDim.new(0, 3);
-		UIListLayout.Parent = MainFramePage;
-		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder;
+		local UIListLayout = Instance.new("UIListLayout")
+		UIListLayout.Padding = UDim.new(0, 6) -- 组件间距
+		UIListLayout.Parent = MainFramePage
+		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 		TabButton.MouseButton1Click:Connect(function()
+			PlayClickSound()
 			for i, v in next, ScrollTab:GetChildren() do
 				if v:IsA("TextButton") then
-					(TweenService:Create(v, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						BackgroundTransparency = 0.9
-					})):Play();
-					(TweenService:Create(v.SelectedTab, TweenInfo.new(0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Size = UDim2.new(0, 3, 0, 0)
-					})):Play();
-					(TweenService:Create(v.IDK, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						ImageTransparency = 0.4
-					})):Play();
-					(TweenService:Create(v.Title, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						TextTransparency = 0.4
-					})):Play();
-				end;
-				(TweenService:Create(TabButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					BackgroundTransparency = 0.7
-				})):Play();
-				(TweenService:Create(SelectedTab, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Size = UDim2.new(0, 3, 0, 20)
-				})):Play();
-				(TweenService:Create(IDK, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					ImageTransparency = 0
-				})):Play();
-				(TweenService:Create(Title, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					TextTransparency = 0
-				})):Play();
-			end;
+					-- 重置所有按钮
+					TweenService:Create(v, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { BackgroundTransparency = 1 }):Play()
+					TweenService:Create(v.SelectedTab, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), { Size = UDim2.new(0, 3, 0, 0) }):Play()
+					TweenService:Create(v.Icon, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { ImageColor3 = _G.DimText }):Play()
+					TweenService:Create(v.Title, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { TextColor3 = _G.DimText }):Play()
+				end
+			end
+			
+			-- 激活当前按钮
+			TweenService:Create(TabButton, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { BackgroundTransparency = 0.5 }):Play()
+			TweenService:Create(SelectedTab, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Size = UDim2.new(0, 3, 0.7, 0) }):Play()
+			TweenService:Create(Icon, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { ImageColor3 = _G.NeonPink }):Play()
+			TweenService:Create(Title, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { TextColor3 = _G.LightText }):Play()
+			
 			for i, v in next, PageList:GetChildren() do
-				currentpage = string.gsub(TabButton.Name, "Unique", "") .. "_Page";
+				currentpage = string.gsub(TabButton.Name, "Unique", "") .. "_Page"
 				if v.Name == currentpage then
-					UIPageLayout:JumpTo(v);
-				end;
-			end;
-		end);
+					UIPageLayout:JumpTo(v)
+				end
+			end
+		end)
+
+		-- 悬停动画
+		TabButton.MouseEnter:Connect(function()
+			if currentpage ~= string.gsub(TabButton.Name, "Unique", "") .. "_Page" then
+				TweenService:Create(TabButton, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
+				TweenService:Create(Icon, TweenInfo.new(0.2), { ImageColor3 = _G.LightText }):Play()
+			end
+		end)
+		TabButton.MouseLeave:Connect(function()
+			if currentpage ~= string.gsub(TabButton.Name, "Unique", "") .. "_Page" then
+				TweenService:Create(TabButton, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+				TweenService:Create(Icon, TweenInfo.new(0.2), { ImageColor3 = _G.DimText }):Play()
+			end
+		end)
 
 		if abc == false then
-			for i, v in next, ScrollTab:GetChildren() do
-				if v:IsA("TextButton") then
-					(TweenService:Create(v, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						BackgroundTransparency = 0.9
-					})):Play();
-					(TweenService:Create(v.SelectedTab, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Size = UDim2.new(0, 3, 0, 20)
-					})):Play();
-					(TweenService:Create(v.IDK, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						ImageTransparency = 0.4
-					})):Play();
-					(TweenService:Create(v.Title, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						TextTransparency = 0.4
-					})):Play();
-				end;
-				(TweenService:Create(TabButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					BackgroundTransparency = 0.7
-				})):Play();
-				(TweenService:Create(SelectedTab, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Size = UDim2.new(0, 3, 0, 20)
-				})):Play();
-				(TweenService:Create(IDK, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					ImageTransparency = 0
-				})):Play();
-				(TweenService:Create(Title, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					TextTransparency = 0
-				})):Play();
-			end;
-			UIPageLayout:JumpToIndex(1);
-			abc = true;
-		end;
+			-- 默认选中第一个
+			TweenService:Create(TabButton, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { BackgroundTransparency = 0.5 }):Play()
+			TweenService:Create(SelectedTab, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Size = UDim2.new(0, 3, 0.7, 0) }):Play()
+			TweenService:Create(Icon, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { ImageColor3 = _G.NeonPink }):Play()
+			TweenService:Create(Title, TweenInfo.new(0.3, Enum.EasingStyle.Cubic), { TextColor3 = _G.LightText }):Play()
+			UIPageLayout:JumpToIndex(1)
+			currentpage = string.gsub(TabButton.Name, "Unique", "") .. "_Page"
+			abc = true
+		end
 
 		(game:GetService("RunService")).Stepped:Connect(function()
 			pcall(function()
-				MainFramePage.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y);
-				ScrollTab.CanvasSize = UDim2.new(0, 0, 0, TabListLayout.AbsoluteContentSize.Y);
-				ScrollSettings.CanvasSize = UDim2.new(0, 0, 0, SettingsListLayout.AbsoluteContentSize.Y);
-			end);
-		end);
-
-		local defaultSize = true;
+				MainFramePage.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 20)
+				ScrollTab.CanvasSize = UDim2.new(0, 0, 0, TabListLayout.AbsoluteContentSize.Y)
+				ScrollSettings.CanvasSize = UDim2.new(0, 0, 0, SettingsListLayout.AbsoluteContentSize.Y + 20)
+			end)
+		end)
+		
+		-- 窗口缩放 (全屏/默认)
+		local defaultSize = true
 		ResizeButton.MouseButton1Click:Connect(function()
+			PlayClickSound()
 			if defaultSize then
-				defaultSize = false;
-				OutlineMain:TweenPosition(UDim2.new(0.5, 0, 0.45, 0), "Out", "Quad", 0.2, true);
-				Main:TweenSize(UDim2.new(1, 0, 1, 0), "Out", "Quad", 0.4, true, function()
-					Page:TweenSize(UDim2.new(0, Main.AbsoluteSize.X - Tab.AbsoluteSize.X - 25, 0, Main.AbsoluteSize.Y - Top.AbsoluteSize.Y - 10), "Out", "Quad", 0.4, true);
-					Tab:TweenSize(UDim2.new(0, WindowConfig.TabWidth, 0, Main.AbsoluteSize.Y - Top.AbsoluteSize.Y - 10), "Out", "Quad", 0.4, true);
-				end);
-				OutlineMain:TweenSize(UDim2.new(1, -10, 1, -10), "Out", "Quad", 0.4, true);
-				ResizeButton.Image = "rbxassetid://10734895698";
+				defaultSize = false
+				BackgroundContainer:TweenPosition(UDim2.new(0.5, 0, 0.5, 0), "Out", "Quad", 0.2, true)
+				BackgroundContainer:TweenSize(UDim2.new(1, -20, 1, -20), "Out", "Quad", 0.4, true)
+				ResizeButton.Image = "rbxassetid://10734895698"
 			else
-				defaultSize = true;
-				Main:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset, 0, WindowConfig.Size.Y.Offset), "Out", "Quad", 0.4, true, function()
-					Page:TweenSize(UDim2.new(0, Main.AbsoluteSize.X - Tab.AbsoluteSize.X - 25, 0, Main.AbsoluteSize.Y - Top.AbsoluteSize.Y - 10), "Out", "Quad", 0.4, true);
-					Tab:TweenSize(UDim2.new(0, WindowConfig.TabWidth, 0, Main.AbsoluteSize.Y - Top.AbsoluteSize.Y - 10), "Out", "Quad", 0.4, true);
-				end);
-				OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
-				ResizeButton.Image = "rbxassetid://10734886735";
-			end;
-		end);
+				defaultSize = true
+				BackgroundContainer:TweenPosition(UDim2.new(0.5, 0, 0.45, 0), "Out", "Quad", 0.2, true)
+				BackgroundContainer:TweenSize(WindowConfig.Size, "Out", "Quad", 0.4, true)
+				ResizeButton.Image = "rbxassetid://10734886735"
+			end
+			-- 强制更新内部尺寸
+			wait(0.4)
+			local newSizeX = BackgroundContainer.AbsoluteSize.X
+			local newSizeY = BackgroundContainer.AbsoluteSize.Y
+			Page.Size = UDim2.new(0, math.clamp(newSizeX - Tab.AbsoluteSize.X - 26, 100, math.huge), 0, math.clamp(newSizeY - Top.AbsoluteSize.Y - 16, 100, math.huge))
+			Tab.Size = UDim2.new(0, WindowConfig.TabWidth, 0, math.clamp(newSizeY - Top.AbsoluteSize.Y - 16, 100, math.huge))
+		end)
 
-		local main = {};
-
+		local main = {}
+		
+		-- 组件: 按钮 (重构)
 		function main:Button(text, callback)
-			local Button = Instance.new("Frame");
-			local UICorner = Instance.new("UICorner");
-			local TextLabel = Instance.new("TextLabel");
-			local TextButton = Instance.new("TextButton");
-			local UICorner_2 = Instance.new("UICorner");
-			local Black = Instance.new("Frame");
-			local UICorner_3 = Instance.new("UICorner");
+			local Button = Instance.new("TextButton")
+			Button.Name = "Button"
+			Button.Parent = MainFramePage
+			Button.BackgroundColor3 = _G.NeonPink
+			Button.BackgroundTransparency = 0
+			Button.Size = UDim2.new(1, 0, 0, 36)
+			Button.Font = Enum.Font.GothamBold
+			Button.Text = text
+			Button.TextColor3 = _G.LightText
+			Button.TextSize = 15
+			Button.AutoButtonColor = false
+			CreateRounded(Button, 8)
+			local Glow = CreateNeonGlow(Button, _G.NeonPink, 6)
+
+			Button.MouseButton1Click:Connect(function()
+				PlayClickSound()
+				callback()
+			end)
+
+			Button.MouseEnter:Connect(function() 
+				TweenService:Create(Button, TweenInfo.new(0.2), { BackgroundTransparency = 0.3 }):Play()
+				TweenService:Create(Glow, TweenInfo.new(0.2), { Transparency = 0.4 }):Play()
+			end)
+			Button.MouseLeave:Connect(function() 
+				TweenService:Create(Button, TweenInfo.new(0.2), { BackgroundTransparency = 0 }):Play()
+				TweenService:Create(Glow, TweenInfo.new(0.2), { Transparency = 0.6 }):Play()
+			end)
+		end
+
+		-- 组件: 开关 (重构)
+		function main:Toggle(text, config, desc, callback)
+			config = config or false
+			local toggled = config
 			
-			Button.Name = "Button";
-			Button.Parent = MainFramePage;
-			Button.BackgroundColor3 = _G.Primary;
-			Button.BackgroundTransparency = 0.9;
-			Button.Size = UDim2.new(1, 0, 0, 40);
-			UICorner.CornerRadius = UDim.new(0, 8);
-			UICorner.Parent = Button;
+			local Button = Instance.new("TextButton")
+			Button.Name = "Button"
+			Button.Parent = MainFramePage
+			Button.BackgroundColor3 = _G.Highlight
+			Button.BackgroundTransparency = 0.5
+			Button.AutoButtonColor = false
+			Button.Font = Enum.Font.SourceSans
+			Button.Text = ""
+			CreateRounded(Button, 8)
 
-			local ImageLabel = Instance.new("ImageLabel");
-			ImageLabel.Name = "ImageLabel";
-			ImageLabel.Parent = TextButton;
-			ImageLabel.BackgroundColor3 = _G.Primary;
-			ImageLabel.BackgroundTransparency = 1;
-			ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5);
-			ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0);
-			ImageLabel.Size = UDim2.new(0, 18, 0, 18);
-			ImageLabel.Image = "rbxassetid://10734898355";
-			ImageLabel.ImageTransparency = 0;
-			ImageLabel.ImageColor3 = _G.Neon;
-			CreateRounded(TextButton, 6);
+			local Title = Instance.new("TextLabel")
+			Title.Parent = Button
+			Title.BackgroundTransparency = 1
+			Title.Font = Enum.Font.GothamSemibold
+			Title.Text = text
+			Title.TextColor3 = _G.LightText
+			Title.TextSize = 15
+			Title.TextXAlignment = Enum.TextXAlignment.Left
+			Title.AnchorPoint = Vector2.new(0, 0.5)
 
-			TextButton.Name = "TextButton";
-			TextButton.Parent = Button;
-			TextButton.BackgroundColor3 = _G.Neon;
-			TextButton.BackgroundTransparency = 0.8;
-			TextButton.AnchorPoint = Vector2.new(1, 0.5);
-			TextButton.Position = UDim2.new(1, -1, 0.5, 0);
-			TextButton.Size = UDim2.new(0, 30, 0, 30);
-			TextButton.Font = Enum.Font.Nunito;
-			TextButton.Text = "";
-			TextButton.TextXAlignment = Enum.TextXAlignment.Left;
-			TextButton.TextColor3 = Color3.fromRGB(255, 255, 255);
-			TextButton.TextSize = 15;
+			local Desc = Instance.new("TextLabel")
+			Desc.Parent = Title
+			Desc.BackgroundTransparency = 1
+			Desc.Font = Enum.Font.Gotham
+			Desc.TextColor3 = _G.DimText
+			Desc.TextSize = 11
+			Desc.TextXAlignment = Enum.TextXAlignment.Left
+			Desc.TextTransparency = 0.3
 
-			TextLabel.Name = "TextLabel";
-			TextLabel.Parent = Button;
-			TextLabel.BackgroundColor3 = _G.Primary;
-			TextLabel.BackgroundTransparency = 1;
-			TextLabel.AnchorPoint = Vector2.new(0, 0.5);
-			TextLabel.Position = UDim2.new(0, 20, 0.5, 0);
-			TextLabel.Size = UDim2.new(1, -50, 1, 0);
-			TextLabel.Font = Enum.Font.Cartoon;
-			TextLabel.RichText = true;
-			TextLabel.Text = text;
-			TextLabel.TextXAlignment = Enum.TextXAlignment.Left;
-			TextLabel.TextColor3 = _G.Accent;
-			TextLabel.TextSize = 15;
-			TextLabel.ClipsDescendants = true;
+			if desc then
+				Desc.Text = desc
+				Title.Position = UDim2.new(0, 15, 0.5, -7)
+				Title.Size = UDim2.new(1, -60, 0, 20)
+				Desc.Position = UDim2.new(0, 0, 1, -2)
+				Desc.Size = UDim2.new(1, 0, 0, 16)
+				Button.Size = UDim2.new(1, 0, 0, 50)
+			else
+				Title.Position = UDim2.new(0, 15, 0.5, 0)
+				Title.Size = UDim2.new(1, -60, 0, 30)
+				Desc.Visible = false
+				Button.Size = UDim2.new(1, 0, 0, 40)
+			end
 
-			local ArrowRight = Instance.new("ImageLabel");
-			ArrowRight.Name = "ArrowRight";
-			ArrowRight.Parent = Button;
-			ArrowRight.BackgroundColor3 = _G.Primary;
-			ArrowRight.BackgroundTransparency = 1;
-			ArrowRight.AnchorPoint = Vector2.new(0, 0.5);
-			ArrowRight.Position = UDim2.new(0, 0, 0.5, 0);
-			ArrowRight.Size = UDim2.new(0, 15, 0, 15);
-			ArrowRight.Image = "rbxassetid://10709768347";
-			ArrowRight.ImageTransparency = 0;
-			ArrowRight.ImageColor3 = _G.Neon;
+			local ToggleImage = Instance.new("TextButton")
+			ToggleImage.Name = "ToggleImage"
+			ToggleImage.Parent = Button
+			ToggleImage.BackgroundColor3 = _G.Highlight
+			ToggleImage.BackgroundTransparency = 0
+			ToggleImage.Position = UDim2.new(1, -15, 0.5, 0)
+			ToggleImage.AnchorPoint = Vector2.new(1, 0.5)
+			ToggleImage.Size = UDim2.new(0, 40, 0, 22)
+			ToggleImage.Text = ""
+			ToggleImage.AutoButtonColor = false
+			CreateRounded(ToggleImage, 11)
+			CreateGlassBorder(ToggleImage)
 
-			Black.Name = "Black";
-			Black.Parent = Button;
-			Black.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
-			Black.BackgroundTransparency = 1;
-			Black.BorderSizePixel = 0;
-			Black.Position = UDim2.new(0, 0, 0, 0);
-			Black.Size = UDim2.new(1, 0, 0, 33);
-			UICorner_3.CornerRadius = UDim.new(0, 5);
-			UICorner_3.Parent = Black;
+			local Circle = Instance.new("Frame")
+			Circle.Name = "Circle"
+			Circle.Parent = ToggleImage
+			Circle.BackgroundColor3 = _G.LightText
+			Circle.Position = UDim2.new(0, 4, 0.5, 0)
+			Circle.Size = UDim2.new(0, 14, 0, 14)
+			Circle.AnchorPoint = Vector2.new(0, 0.5)
+			CreateRounded(Circle, 7)
+			local CircleGlow = CreateNeonGlow(Circle, _G.LightText, 6)
+			CircleGlow.Transparency = 1 -- 默认关闭
 
-			TextButton.MouseButton1Click:Connect(function()
-				callback();
-			end);
-		end;
+			local function SetToggle(state)
+				toggled = state
+				if toggled then
+					Circle:TweenPosition(UDim2.new(1, -18, 0.5, 0), "Out", "Cubic", 0.2, true)
+					TweenService:Create(ToggleImage, TweenInfo.new(0.2), { BackgroundColor3 = _G.NeonPink }):Play()
+					TweenService:Create(CircleGlow, TweenInfo.new(0.2), { Transparency = 0.7, Color = _G.NeonPink }):Play()
+				else
+					Circle:TweenPosition(UDim2.new(0, 4, 0.5, 0), "Out", "Cubic", 0.2, true)
+					TweenService:Create(ToggleImage, TweenInfo.new(0.2), { BackgroundColor3 = _G.Highlight }):Play()
+					TweenService:Create(CircleGlow, TweenInfo.new(0.2), { Transparency = 1, Color = _G.LightText }):Play()
+				end
+				pcall(callback, toggled)
+			end
 
-		-- 由于代码长度限制，这里只展示了主要改造部分
-		-- 其他功能如Toggle、Dropdown、Slider等也按照相同风格进行了改造
-		-- 完整代码需要继续按照这个透明粉色主题进行改造
+			ToggleImage.MouseButton1Click:Connect(function()
+				PlayClickSound()
+				SetToggle(not toggled)
+			end)
+			Button.MouseButton1Click:Connect(function()
+				PlayClickSound()
+				SetToggle(not toggled)
+			end)
+			
+			-- 初始状态
+			SetToggle(config)
+		end
 
-		return main;
-	end;
-	
-	return uitab;
-end;
+		-- 组件: 下拉菜单 (重构)
+		function main:Dropdown(text, option, var, callback)
+			local isdropping = false
+			local activeItem = var
+			
+			local Dropdown = Instance.new("Frame")
+			Dropdown.Name = "Dropdown"
+			Dropdown.Parent = MainFramePage
+			Dropdown.BackgroundColor3 = _G.Highlight
+			Dropdown.BackgroundTransparency = 0.5
+			Dropdown.ClipsDescendants = true -- 修改: 先裁剪
+			Dropdown.Size = UDim2.new(1, 0, 0, 40)
+			CreateRounded(Dropdown, 8)
 
-return Update;
+			local DropTitle = Instance.new("TextLabel")
+			DropTitle.Name = "DropTitle"
+			DropTitle.Parent = Dropdown
+			DropTitle.BackgroundTransparency = 1
+			DropTitle.Size = UDim2.new(1, 0, 1, 0)
+			DropTitle.Font = Enum.Font.GothamSemibold
+			DropTitle.Text = text
+			DropTitle.TextColor3 = _G.LightText
+			DropTitle.TextSize = 15
+			DropTitle.TextXAlignment = Enum.TextXAlignment.Left
+			DropTitle.Position = UDim2.new(0, 15, 0.5, 0)
+			DropTitle.AnchorPoint = Vector2.new(0, 0.5)
+
+			local SelectItems = Instance.new("TextButton")
+			SelectItems.Name = "SelectItems"
+			SelectItems.Parent = Dropdown
+			SelectItems.BackgroundColor3 = _G.Highlight
+			SelectItems.BackgroundTransparency = 0
+			SelectItems.Position = UDim2.new(1, -15, 0.5, 0)
+			SelectItems.Size = UDim2.new(0, 120, 0, 26)
+			SelectItems.AnchorPoint = Vector2.new(1, 0.5)
+			SelectItems.Font = Enum.Font.Gotham
+			SelectItems.AutoButtonColor = false
+			SelectItems.TextSize = 13
+			SelectItems.TextColor3 = _G.DimText
+			SelectItems.Text = "   " .. (var or "Select")
+			SelectItems.TextXAlignment = Enum.TextXAlignment.Left
+			CreateRounded(SelectItems, 5)
+
+			local ArrowDown = Instance.new("ImageLabel")
+			ArrowDown.Name = "ArrowDown"
+			ArrowDown.Parent = SelectItems
+			ArrowDown.BackgroundTransparency = 1
+			ArrowDown.AnchorPoint = Vector2.new(1, 0.5)
+			ArrowDown.Position = UDim2.new(1, -8, 0.5, 0)
+			ArrowDown.Size = UDim2.new(0, 14, 0, 14)
+			ArrowDown.Image = "rbxassetid://3926306068" -- 下箭头
+			ArrowDown.ImageColor3 = _G.DimText
+			ArrowDown.Rotation = 0
+
+			-- 下拉内容框架 (玻璃态)
+			local DropdownFrameScroll = Instance.new("Frame")
+			DropdownFrameScroll.Name = "DropdownFrameScroll"
+			DropdownFrameScroll.Parent = Dropdown
+			DropdownFrameScroll.BackgroundColor3 = _G.DarkGlass
+			DropdownFrameScroll.BackgroundTransparency = 0.2 -- 玻璃态
+			DropdownFrameScroll.ClipsDescendants = true
+			DropdownFrameScroll.Size = UDim2.new(1, 0, 0, 120)
+			DropdownFrameScroll.Position = UDim2.new(0, 0, 1, 5)
+			DropdownFrameScroll.Visible = false
+			DropdownFrameScroll.ZIndex = 2
+			CreateRounded(DropdownFrameScroll, 8)
+			Instance.new("UIBlur", DropdownFrameScroll).Size = 16
+			CreateGlassBorder(DropdownFrameScroll)
+
+			local DropScroll = Instance.new("ScrollingFrame")
+			DropScroll.Name = "DropScroll"
+			DropScroll.Parent = DropdownFrameScroll
+			DropScroll.Active = true
+			DropScroll.BackgroundTransparency = 1
+			DropScroll.Size = UDim2.new(1, 0, 1, 0)
+			DropScroll.ScrollBarThickness = 3
+			DropScroll.ScrollBarImageColor3 = _G.NeonPink
+			DropScroll.ZIndex = 3
+			Instance.new("UIPadding", DropScroll).Padding = UDim.new(0, 5, 0, 5)
+			
+			local UIListLayout = Instance.new("UIListLayout")
+			UIListLayout.Parent = DropScroll
+			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			UIListLayout.Padding = UDim.new(0, 2)
+
+			local function CreateItem(v)
+				local Item = Instance.new("TextButton")
+				Item.Name = "Item"
+				Item.Parent = DropScroll
+				Item.BackgroundColor3 = _G.Highlight
+				Item.BackgroundTransparency = 1
+				Item.Size = UDim2.new(1, 0, 0, 30)
+				Item.Font = Enum.Font.Gotham
+				Item.Text = tostring(v)
+				Item.TextColor3 = _G.DimText
+				Item.TextSize = 13
+				Item.TextXAlignment = Enum.TextXAlignment.Left
+				Item.ZIndex = 4
+				Item.AutoButtonColor = false
+				CreateRounded(Item, 5)
+				Instance.new("UIPadding", Item).PaddingLeft = UDim.new(0, 8)
+
+				if activeItem == v then
+					Item.BackgroundTransparency = 0.5
+					Item.TextColor3 = _G.LightText
+				end
+
+				Item.MouseButton1Click:Connect(function()
+					PlayClickSound()
+					callback(Item.Text)
+					activeItem = Item.Text
+					SelectItems.Text = "   " .. Item.Text
+					
+					-- 更新所有项目状态
+					for i, child in next, DropScroll:GetChildren() do
+						if child:IsA("TextButton") then
+							if child.Text == activeItem then
+								TweenService:Create(child, TweenInfo.new(0.2), { BackgroundTransparency = 0.5, TextColor3 = _G.LightText }):Play()
+							else
+								TweenService:Create(child, TweenInfo.new(0.2), { BackgroundTransparency = 1, TextColor3 = _G.DimText }):Play()
+							end
+						end
+					end
+					
+					-- 关闭下拉
+					isdropping = false
+					Dropdown.ClipsDescendants = true
+					DropdownFrameScroll.Visible = false
+					TweenService:Create(Dropdown, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), { Size = UDim2.new(1, 0, 0, 40) }):Play()
+					TweenService:Create(ArrowDown, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), { Rotation = 0 }):Play()
+				end)
+				
+				Item.MouseEnter:Connect(function()
+					if Item.Text ~= activeItem then
+						TweenService:Create(Item, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
+					end
+				end)
+				Item.MouseLeave:Connect(function()
+					if Item.Text ~= activeItem then
+						TweenService:Create(Item, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+					end
+				end)
+			end
+
+			for i, v in next, option do
+				CreateItem(v)
+			end
+			
+			DropScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+
+			SelectItems.MouseButton1Click:Connect(function()
+				PlayClickSound()
+				isdropping = not isdropping
+				if isdropping then
+					Dropdown.ClipsDescendants = false
+					DropdownFrameScroll.Visible = true
+					TweenService:Create(Dropdown, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), { Size = UDim2.new(1, 0, 0, 40 + 120 + 5) }):Play()
+					TweenService:Create(ArrowDown, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), { Rotation = 180 }):Play()
+				else
+					Dropdown.ClipsDescendants = true
+					DropdownFrameScroll.Visible = false
+					TweenService:Create(Dropdown, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), { Size = UDim2.new(1, 0, 0, 40) }):Play()
+					TweenService:Create(ArrowDown, TweenInfo.new(0.2, Enum.EasingStyle.Cubic), { Rotation = 0 }):Play()
+				end
+			end)
+			
+			local dropfunc = {}
+			function dropfunc:Add(t)
+				CreateItem(t)
+				DropScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+			end
+			function dropfunc:Clear()
+				SelectItems.Text = "   Select"
+				isdropping = false
+				DropdownFrameScroll.Visible = false
+				Dropdown.ClipsDescendants = true
+				Dropdown.Size = UDim2.new(1, 0, 0, 40)
+				for i, v in next, DropScroll:GetChildren() do
+					if v:IsA("TextButton") then
+						v:Destroy()
+					end
+				end
+			end
+			return dropfunc
+		end
+
+		-- 组件: 滑块 (重构)
+		function main:Slider(text, min, max, set, callback)
+			local Slider = Instance.new("Frame")
+			Slider.Name = "Slider"
+			Slider.Parent = MainFramePage
+			Slider.BackgroundColor3 = _G.Highlight
+			Slider.BackgroundTransparency = 0.5
+			Slider.Size = UDim2.new(1, 0, 0, 40)
+			CreateRounded(Slider, 8)
+			
+			local Title = Instance.new("TextLabel")
+			Title.Parent = Slider
+			Title.BackgroundTransparency = 1
+			Title.Position = UDim2.new(0, 15, 0.5, 0)
+			Title.Size = UDim2.new(0.5, 0, 0, 30)
+			Title.Font = Enum.Font.GothamSemibold
+			Title.Text = text
+			Title.AnchorPoint = Vector2.new(0, 0.5)
+			Title.TextColor3 = _G.LightText
+			Title.TextSize = 15
+			Title.TextXAlignment = Enum.TextXAlignment.Left
+
+			local ValueText = Instance.new("TextLabel")
+			ValueText.Parent = Slider
+			ValueText.BackgroundTransparency = 1
+			ValueText.Position = UDim2.new(1, -15, 0.5, 0)
+			ValueText.Size = UDim2.new(0, 40, 0, 30)
+			ValueText.Font = Enum.Font.GothamBold
+			ValueText.Text = set
+			ValueText.AnchorPoint = Vector2.new(1, 0.5)
+			ValueText.TextColor3 = _G.NeonPink
+			ValueText.TextSize = 14
+			ValueText.TextXAlignment = Enum.TextXAlignment.Right
+
+			local bar = Instance.new("Frame")
+			bar.Name = "bar"
+			bar.Parent = Slider
+			bar.BackgroundColor3 = _G.Highlight
+			bar.BackgroundTransparency = 0
+			bar.Size = UDim2.new(0.4, 0, 0, 6)
+			bar.Position = UDim2.new(1, -65, 0.5, 0)
+			bar.AnchorPoint = Vector2.new(1, 0.5)
+			CreateRounded(bar, 3)
+			CreateGlassBorder(bar)
+
+			local bar1 = Instance.new("Frame")
+			bar1.Name = "bar1"
+			bar1.Parent = bar
+			bar1.BackgroundColor3 = _G.NeonPink
+			bar1.Size = UDim2.new(set / max, 0, 1, 0)
+			CreateRounded(bar1, 3)
+			local BarGlow = CreateNeonGlow(bar1, _G.NeonPink, 4)
+			BarGlow.Transparency = 0.7
+
+			local circlebar = Instance.new("ImageButton")
+			circlebar.Name = "circlebar"
+			circlebar.Parent = bar1
+			circlebar.BackgroundColor3 = _G.LightText
+			circlebar.Position = UDim2.new(1, 0, 0.5, 0)
+			circlebar.AnchorPoint = Vector2.new(0.5, 0.5)
+			circlebar.Size = UDim2.new(0, 14, 0, 14)
+			circlebar.ZIndex = 2
+			circlebar.AutoButtonColor = false
+			CreateRounded(circlebar, 7)
+			local CircleGlow = CreateNeonGlow(circlebar, _G.LightText, 6)
+			CircleGlow.Transparency = 0.6
+			
+			local Value = set
+			pcall(function() callback(Value) end)
+			
+			local Dragging = false
+			local function UpdateSlider(Input)
+				local barAbsPos = bar.AbsolutePosition
+				local barAbsSize = bar.AbsoluteSize
+				local relativeX = math.clamp(Input.Position.X - barAbsPos.X, 0, barAbsSize.X)
+				local percent = relativeX / barAbsSize.X
+				Value = math.floor(min + (max - min) * percent + 0.5)
+				
+				bar1.Size = UDim2.new(percent, 0, 1, 0)
+				ValueText.Text = Value
+				pcall(function() callback(Value) end)
+			end
+
+			circlebar.InputBegan:Connect(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+					Dragging = true
+					PlayClickSound()
+					TweenService:Create(CircleGlow, TweenInfo.new(0.2), { Transparency = 0.4, Color = _G.NeonPink }):Play()
+					TweenService:Create(circlebar, TweenInfo.new(0.2), { BackgroundColor3 = _G.NeonPink }):Play()
+				end
+			end)
+			bar.InputBegan:Connect(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+					Dragging = true
+					PlayClickSound()
+					UpdateSlider(Input)
+					TweenService:Create(CircleGlow, TweenInfo.new(0.2), { Transparency = 0.4, Color = _G.NeonPink }):Play()
+					TweenService:Create(circlebar, TweenInfo.new(0.2), { BackgroundColor3 = _G.NeonPink }):Play()
+				end
+			end)
+			UserInputService.InputEnded:Connect(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+					Dragging = false
+					TweenService:Create(CircleGlow, TweenInfo.new(0.2), { Transparency = 0.6, Color = _G.LightText }):Play()
+					TweenService:Create(circlebar, TweenInfo.new(0.2), { BackgroundColor3 = _G.LightText }):Play()
+				end
+			end)
+			UserInputService.InputChanged:Connect(function(Input)
+				if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
+					UpdateSlider(Input)
+				end
+			end)
+		end
+		
+		-- 组件: 文本框 (重构)
+		function main:Textbox(text, disappear, callback)
+			local Textbox = Instance.new("Frame")
+			Textbox.Name = "Textbox"
+			Textbox.Parent = MainFramePage
+			Textbox.BackgroundColor3 = _G.Highlight
+			Textbox.BackgroundTransparency = 0.5
+			Textbox.Size = UDim2.new(1, 0, 0, 40)
+			CreateRounded(Textbox, 8)
+
+			local TextboxLabel = Instance.new("TextLabel")
+			TextboxLabel.Name = "TextboxLabel"
+			TextboxLabel.Parent = Textbox
+			TextboxLabel.BackgroundTransparency = 1
+			TextboxLabel.Position = UDim2.new(0, 15, 0.5, 0)
+			TextboxLabel.Text = text
+			TextboxLabel.Size = UDim2.new(0.5, 0, 1, 0)
+			TextboxLabel.Font = Enum.Font.GothamSemibold
+			TextboxLabel.AnchorPoint = Vector2.new(0, 0.5)
+			TextboxLabel.TextColor3 = _G.LightText
+			TextboxLabel.TextSize = 15
+			TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+			local RealTextbox = Instance.new("TextBox")
+			RealTextbox.Name = "RealTextbox"
+			RealTextbox.Parent = Textbox
+			RealTextbox.BackgroundColor3 = _G.Highlight
+			RealTextbox.BackgroundTransparency = 0
+			RealTextbox.Position = UDim2.new(1, -15, 0.5, 0)
+			RealTextbox.AnchorPoint = Vector2.new(1, 0.5)
+			RealTextbox.Size = UDim2.new(0.4, 0, 0, 26)
+			RealTextbox.Font = Enum.Font.Gotham
+			RealTextbox.Text = ""
+			RealTextbox.TextColor3 = _G.DimText
+			RealTextbox.PlaceholderColor3 = _G.DimText
+			RealTextbox.PlaceholderText = disappear or ""
+			RealTextbox.TextSize = 13
+			RealTextbox.ClearTextOnFocus = false
+			RealTextbox.ClipsDescendants = true
+			CreateRounded(RealTextbox, 5)
+			CreateGlassBorder(RealTextbox)
+
+			RealTextbox.FocusLost:Connect(function(enterPressed)
+				if enterPressed then
+					PlayClickSound()
+					pcall(callback, RealTextbox.Text)
+				end
+			end)
+
+			RealTextbox.Focused:Connect(function()
+				TweenService:Create(RealTextbox, TweenInfo.new(0.2), { BorderColor3 = _G.NeonPink, BorderSizePixel = 1 }):Play()
+			end)
+			RealTextbox.FocusLost:Connect(function()
+				TweenService:Create(RealTextbox, TweenInfo.new(0.2), { BorderSizePixel = 0 }):Play()
+			end)
+		end
+
+		-- 组件: 标签 (重构)
+		function main:Label(text)
+			local Frame = Instance.new("Frame")
+			Frame.Name = "Frame"
+			Frame.Parent = MainFramePage
+			Frame.BackgroundTransparency = 1
+			Frame.Size = UDim2.new(1, 0, 0, 30)
+
+			local Label = Instance.new("TextLabel")
+			Label.Name = "Label"
+			Label.Parent = Frame
+			Label.BackgroundTransparency = 1
+			Label.Size = UDim2.new(1, -30, 0, 30)
+			Label.Font = Enum.Font.GothamSemibold
+			Label.Position = UDim2.new(0, 30, 0.5, 0)
+			Label.AnchorPoint = Vector2.new(0, 0.5)
+			Label.TextColor3 = _G.DimText
+			Label.TextTransparency = 0.2
+			Label.TextSize = 15
+			Label.Text = text
+			Label.TextXAlignment = Enum.TextXAlignment.Left
+
+			local ImageLabel = Instance.new("ImageLabel")
+			ImageLabel.Name = "ImageLabel"
+			ImageLabel.Parent = Frame
+			ImageLabel.BackgroundTransparency = 1
+			ImageLabel.Position = UDim2.new(0, 10, 0.5, 0)
+			ImageLabel.Size = UDim2.new(0, 14, 0, 14)
+			ImageLabel.AnchorPoint = Vector2.new(0, 0.5)
+			ImageLabel.Image = "rbxassetid://10723415903"
+			ImageLabel.ImageColor3 = _G.DimText
+			ImageLabel.ImageTransparency = 0.2
+
+			local labelfunc = {}
+			function labelfunc:Set(newtext)
+				Label.Text = newtext
+			end
+			return labelfunc
+		end
+
+		-- 组件: 分隔符 (重构)
+		function main:Seperator(text)
+			local Seperator = Instance.new("Frame")
+			Seperator.Name = "Seperator"
+			Seperator.Parent = MainFramePage
+			Seperator.BackgroundTransparency = 1
+			Seperator.Size = UDim2.new(1, 0, 0, 30)
+			
+			local Sep2 = Instance.new("TextLabel")
+			Sep2.Name = "Sep2"
+			Sep2.Parent = Seperator
+			Sep2.BackgroundTransparency = 1
+			Sep2.AnchorPoint = Vector2.new(0.5, 0.5)
+			Sep2.Position = UDim2.new(0.5, 0, 0.5, 0)
+			Sep2.Size = UDim2.new(1, 0, 1, 0)
+			Sep2.Font = Enum.Font.GothamBold
+			Sep2.Text = text
+			Sep2.TextColor3 = _G.LightText
+			Sep2.TextSize = 14
+			Sep2.TextTransparency = 0.1
+
+			local function CreateLine()
+				local Line = Instance.new("Frame")
+				Line.Parent = Seperator
+				Line.BackgroundColor3 = _G.Highlight
+				Line.BackgroundTransparency = 0.5
+				Line.AnchorPoint = Vector2.new(0.5, 0.5)
+				Line.Position = UDim2.new(0.5, 0, 0.5, 0)
+				Line.Size = UDim2.new(1, -20, 0, 1)
+				return Line
+			end
+			
+			local Line1 = CreateLine()
+			local textWidth = (game:GetService("TextService")):GetTextSize(text, Sep2.TextSize, Sep2.Font, Vector2.new(math.huge, math.huge)).X
+			Sep2.Size = UDim2.new(0, textWidth + 20, 1, 0)
+			Line1.Size = UDim2.new(0.5, -(textWidth / 2) - 15, 0, 1)
+			Line1.Position = UDim2.new(0.25, -(textWidth / 4) - 7.5, 0.5, 0)
+			
+			local Line2 = CreateLine()
+			Line2.Size = UDim2.new(0.5, -(textWidth / 2) - 15, 0, 1)
+			Line2.Position = UDim2.new(0.75, (textWidth / 4) + 7.5, 0.5, 0)
+		end
+
+		-- 组件: 分割线 (重构)
+		function main:Line()
+			local Linee = Instance.new("Frame")
+			Linee.Name = "Linee"
+			Linee.Parent = MainFramePage
+			Linee.BackgroundTransparency = 1
+			Linee.Size = UDim2.new(1, 0, 0, 10)
+			
+			local Line = Instance.new("Frame")
+			Line.Name = "Line"
+			Line.Parent = Linee
+			Line.BackgroundColor3 = _G.Highlight
+			Line.BackgroundTransparency = 0.5
+			Line.BorderSizePixel = 0
+			Line.Position = UDim2.new(0.5, 0, 0.5, 0)
+			Line.AnchorPoint = Vector2.new(0.5, 0.5)
+			Line.Size = UDim2.new(1, -20, 0, 1)
+		end
+		
+		return main
+	end
+	return uitab
+end
+
+return Update
