@@ -1,11 +1,11 @@
 --[[
-	STELLAR UI 库 - 霓虹玻璃态改造版
-	设计要求:
-	1. 透明玻璃态 (亚克力/磨砂玻璃效果)
-	2. 粉色霓虹主题 (热粉色主色调 + 辉光)
-	3. 现代化交互 (流畅动画和视觉反馈)
-	4. 创意元素 (动态背景、音效)
-	5. 性能优化 (使用 UIBlur, 避免 UIShadow)
+	STELLAR UI 库 - 霓虹玻璃态改造版 (已修复兼容性问题)
+	
+	修复日志:
+	- [关键] 使用 pcall (受保护的调用) 来安全创建 "UIBlur" 实例。
+	  如果 UIBlur 不可用 (例如在旧客户端上), 脚本将不再报错,
+	  而是会使用一个半透明的背景作为后备方案。
+	- [修复] 修复了 Textbox (文本框) 在聚焦时辉光效果不生效的BUG。
 ]]
 
 if (game:GetService("CoreGui")):FindFirstChild("STELLAR") and (game:GetService("CoreGui")):FindFirstChild("ScreenGui") then
@@ -65,6 +65,22 @@ function CreateNeonGlow(Parent, Color, Thickness)
 	return Glow
 end
 
+-- [新] 助手: 安全地创建模糊效果 (兼容性修复)
+function CreateBlur(Parent, Size)
+	local success, blur = pcall(function()
+		return Instance.new("UIBlur", Parent)
+	end)
+	if success and blur then
+		blur.Size = Size
+	else
+		-- 后备方案: 如果 UIBlur 失败, 仅使用半透明背景
+		if Parent:IsA("GuiObject") then
+			Parent.BackgroundTransparency = 0.3 -- 稍微不透明的后备
+		end
+	end
+	return blur
+end
+
 -- 助手: 窗口拖动
 function MakeDraggable(topbarobject, object)
 	local Dragging = nil
@@ -121,7 +137,7 @@ OutlineButton.Position = UDim2.new(0, 10, 0, 10)
 OutlineButton.Size = UDim2.new(0, 50, 0, 50)
 CreateRounded(OutlineButton, 14)
 CreateGlassBorder(OutlineButton)
-Instance.new("UIBlur", OutlineButton).Size = 16 -- 模糊效果
+CreateBlur(OutlineButton, 16) -- 使用安全调用
 
 local ImageButton = Instance.new("ImageButton")
 ImageButton.Parent = OutlineButton
@@ -197,7 +213,7 @@ function Update:Notify(desc)
 	OutlineFrame.Size = UDim2.new(0, 412, 0, 72)
 	CreateRounded(OutlineFrame, 12)
 	CreateGlassBorder(OutlineFrame)
-	Instance.new("UIBlur", OutlineFrame).Size = 16
+	CreateBlur(OutlineFrame, 16) -- 使用安全调用
 
 	Frame.Name = "Frame"
 	Frame.Parent = OutlineFrame
@@ -261,7 +277,7 @@ function Update:StartLoad()
 	BlurBackground.BackgroundColor3 = _G.DarkGlass
 	BlurBackground.BackgroundTransparency = 0.1
 	BlurBackground.Size = UDim2.new(1, 0, 1, 0)
-	Instance.new("UIBlur", BlurBackground).Size = 24
+	CreateBlur(BlurBackground, 24) -- 使用安全调用
 
 	-- 标题
 	local TitleLoader = Instance.new("TextLabel")
@@ -449,7 +465,7 @@ function CreateDynamicBackground(parent)
 	bgBlur.BackgroundColor3 = _G.DarkGlass
 	bgBlur.BackgroundTransparency = 0.2 -- 玻璃模糊层
 	bgBlur.ZIndex = 1
-	Instance.new("UIBlur", bgBlur).Size = 24 -- 高斯模糊
+	CreateBlur(bgBlur, 24) -- 使用安全调用
 end
 
 
@@ -610,7 +626,7 @@ function Update:Window(Config)
 	BackgroundSettings.Visible = false
 	BackgroundSettings.ZIndex = 100
 	CreateRounded(BackgroundSettings, 15)
-	Instance.new("UIBlur", BackgroundSettings).Size = 24 -- 强模糊
+	CreateBlur(BackgroundSettings, 24) -- 使用安全调用
 
 	local SettingsFrame = Instance.new("Frame")
 	SettingsFrame.Name = "SettingsFrame"
@@ -1234,7 +1250,7 @@ function Update:Window(Config)
 			DropdownFrameScroll.Visible = false
 			DropdownFrameScroll.ZIndex = 2
 			CreateRounded(DropdownFrameScroll, 8)
-			Instance.new("UIBlur", DropdownFrameScroll).Size = 16
+			CreateBlur(DropdownFrameScroll, 16) -- 使用安全调用
 			CreateGlassBorder(DropdownFrameScroll)
 
 			local DropScroll = Instance.new("ScrollingFrame")
@@ -1508,7 +1524,7 @@ function Update:Window(Config)
 			RealTextbox.ClearTextOnFocus = false
 			RealTextbox.ClipsDescendants = true
 			CreateRounded(RealTextbox, 5)
-			CreateGlassBorder(RealTextbox)
+			local Border = CreateGlassBorder(RealTextbox) -- [修复] 保存边框实例
 
 			RealTextbox.FocusLost:Connect(function(enterPressed)
 				if enterPressed then
@@ -1517,11 +1533,12 @@ function Update:Window(Config)
 				end
 			end)
 
+			-- [修复] 绑定聚焦/失焦动画到边框
 			RealTextbox.Focused:Connect(function()
-				TweenService:Create(RealTextbox, TweenInfo.new(0.2), { BorderColor3 = _G.NeonPink, BorderSizePixel = 1 }):Play()
+				TweenService:Create(Border, TweenInfo.new(0.2), { Color = _G.NeonPink, Transparency = 0.5 }):Play()
 			end)
-			RealTextbox.FocusLost:Connect(function()
-				TweenService:Create(RealTextbox, TweenInfo.new(0.2), { BorderSizePixel = 0 }):Play()
+			RealTextbox.FocusLost:Connect(function() --  separate listener
+				TweenService:Create(Border, TweenInfo.new(0.2), { Color = Color3.fromRGB(255, 255, 255), Transparency = 0.85 }):Play()
 			end)
 		end
 
@@ -1633,3 +1650,4 @@ function Update:Window(Config)
 end
 
 return Update
+
